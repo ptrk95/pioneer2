@@ -7,7 +7,7 @@
 
 static const std::string OPENCV_WINDOW = "Image window";
 static const std::string URL = "http://192.168.0.3:8080/video";
-static const std::string video = "/home/patrick/catkin_ws/src/pioneer2/videos/test.mp4";
+static const std::string video = "/home/ubuntu/catkin_ws/src/pioneer2/videos/test.mp4";
 static int publish_rate = 10;
 static int height = 800;
 
@@ -22,6 +22,7 @@ int main(int argc, char  **argv)
 
     image_pub = image_trans.advertise("camera_module/video_stream", 1);
     ros::param::get("camera_module/publish_rate", publish_rate);
+    ros::param::get("camera_module/height", height);
     ros::Rate loop_rate(publish_rate);
 
     cv::VideoCapture cap;
