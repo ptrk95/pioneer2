@@ -1,6 +1,12 @@
+git submodule update --init --recursive
+git pull --recurse-submodules
+
+
+
 sudo chmod +x build.sh
 sudo chmod +x buildClean.sh
 sudo chmod +x run.sh
+sudo chmod +x install.sh
 
 ./build.sh
 
