@@ -2,6 +2,7 @@
  
      <node pkg="pioneer2" name="camera_module" type="camera_module" output="screen">
 	<param name="publish_rate" type="int" value="30" />
+<param name="height" type="int" value="480" />
      </node>
 
 	<node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
