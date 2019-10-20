@@ -1,0 +1,15 @@
+<launch>
+ 
+     <node pkg="pioneer2" name="camera_module" type="camera_module" output="screen">
+	<param name="publish_rate" type="int" value="30" />
+     </node>
+
+	<node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
+     </node>
+
+	<node pkg="pioneer2" name="subscriber" type="subscriber" output="screen">
+	<param name="height" type="int" value="360" />
+     </node>
+
+
+</launch>

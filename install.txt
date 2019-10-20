@@ -1,0 +1,7 @@
+sudo chmod +x build.sh
+sudo chmod +x run.sh
+
+./build.sh
+
+
+sudo apt-get install libzbar-dev
