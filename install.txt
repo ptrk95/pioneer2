@@ -1,4 +1,5 @@
 sudo chmod +x build.sh
+sudo chmod +x buildClean.sh
 sudo chmod +x run.sh
 
 ./build.sh
