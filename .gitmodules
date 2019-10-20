@@ -4,3 +4,6 @@
 [submodule "pca9685"]
 	path = pca9685
 	url = https://github.com/Reinbert/pca9685.git
+[submodule "Aria"]
+	path = Aria
+	url = https://github.com/cinvesrob/Aria.git

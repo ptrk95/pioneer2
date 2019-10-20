@@ -12,7 +12,20 @@ cd ~/catkin_ws/src/pioneer2/WiringPi/
 cd ~/catkin_ws/src/pioneer2/pca9685/src
 sudo make install
 
+cd ~/catkin_ws/src/pioneer2/Aria/
+make
+cd ~/catkin_ws/src/pioneer2/Aria/ArNetworking/
+make
+cd ~/catkin_ws/src/pioneer2/Aria/
+sudo make install
 
+echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/Aria/lib"' >> ~/.bashrc
+sudo ldconfig
+
+cd ~/catkin_ws/src/pioneer2/Aria/
+make lib/libAria.a
+make lib/libArNetworking.a
+sudo ldconfig
 
 sudo chmod +x ~/catkin_ws/src/pioneer2/build.sh
 sudo chmod +x ~/catkin_ws/src/pioneer2/buildClean.sh

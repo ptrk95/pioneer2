@@ -2,7 +2,8 @@
  
      <node pkg="pioneer2" name="camera_module" type="camera_module" output="screen">
 	<param name="publish_rate" type="int" value="30" />
-<param name="height" type="int" value="480" />
+	<param name="height" type="int" value="480" />
+	<param name="video_src" type="string" value="/home/ubuntu/catkin_ws/src/pioneer2/videos/test.mp4" />
      </node>
 
 	<node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
