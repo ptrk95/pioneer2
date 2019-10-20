@@ -9,7 +9,7 @@ static const std::string OPENCV_WINDOW = "Image window";
 static const std::string URL = "http://192.168.0.3:8080/video";
 static const std::string video = "/home/patrick/catkin_ws/src/pioneer2/videos/test.mp4";
 static int publish_rate = 10;
-static int height = 960;
+static int height = 800;
 
 int main(int argc, char  **argv)
 {

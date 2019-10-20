@@ -7,6 +7,8 @@
 #include "zbar.h"
 #include "vector"
 #include "algorithm"
+#include "mutex"
+#include "thread"
 
 
 static int height = 360;
@@ -23,6 +25,8 @@ class qr_scanner{
     image_transport::ImageTransport image_trans;
     image_transport::Subscriber image_sub;
     image_transport::Publisher image_pub;
+    std::mutex mutex_img;
+    std::vector<cv::Mat> buffer_imgs;
 
 
 public:
@@ -30,10 +34,26 @@ public:
 qr_scanner():image_trans(node_handle){
     image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
+
 }
 
 ~qr_scanner(){
     cv::destroyAllWindows();
+}
+
+void callback_buffer(const sensor_msgs::ImageConstPtr &msg){
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch(cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    buffer_imgs.push_back(cv_ptr->image);
 }
 
 // Find and decode barcodes and QR codes
