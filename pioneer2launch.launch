@@ -8,7 +8,9 @@
      </node>
 
 
-     <node pkg="pioneer2" name="qr_scanner_multiThread" type="qr_scanner_multiThread" output="screen">
+     <node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
+	<param name="height_roi" type="int" value="400" />
+	<param name="width_roi" type="int" value="640" />
      </node>
 
      <node pkg="pioneer2" name="subscriber" type="subscriber" output="screen">

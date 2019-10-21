@@ -8,8 +8,9 @@
 #include "vector"
 #include "algorithm"
 
-
-static int height = 360;
+//height of region of interest
+static int height_roi = 400;
+static int width_roi = 640;
 
 typedef struct
 {
@@ -92,10 +93,12 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
         return;
     }
     
-    float scale = float(height)/float(cv_ptr->image.rows);
-    
+    //float scale = float(height)/float(cv_ptr->image.rows);
+    cv::Rect roi_rect = cv::Rect((cv_ptr->image.cols - width_roi)/2, (cv_ptr->image.rows - height_roi)/2, width_roi, height_roi);
+    cv::Mat roi = cv_ptr->image(roi_rect);
+    cv::rectangle(cv_ptr->image, roi_rect, cv::Scalar(0,0,255), 2);
     std::vector<decodedObject> decodedObjects;
-    decode(cv_ptr->image, decodedObjects);
+    decode(roi, decodedObjects);
 
     size_t size = decodedObjects.size();
     if(size > 0){
@@ -117,7 +120,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
             
             for(int j = 0; j < n; j++)
             {
-                line(cv_ptr->image, hull[j], hull[ (j+1) % n], cv::Scalar(255,0,0), 3);
+                cv::line(roi, hull[j], hull[ (j+1) % n], cv::Scalar(255,0,0), 3);
             }
             
         }
@@ -132,6 +135,9 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 int main(int argc,  char  **argv)
 {
     ros::init(argc, argv, "qr_scanner");
+
+    ros::param::get("qr_scanner/height_roi", height_roi);
+    ros::param::get("qr_scanner/width_roi", width_roi);
 
     qr_scanner scan_qr = qr_scanner();
     
