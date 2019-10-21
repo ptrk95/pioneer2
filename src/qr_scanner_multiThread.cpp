@@ -11,6 +11,11 @@
 #include "thread"
 
 
+
+ bool done_t1 = true;
+ bool done_t2 = true;
+ image_transport::Publisher image_pub;
+
 static int height = 360;
 
 typedef struct
@@ -20,33 +25,10 @@ typedef struct
   std::vector <cv::Point> location;
 }decodedObject;
 
-class qr_scanner_multiThread{
-    std::atomic_bool done_t1 = {true};
-    std::atomic_bool done_t2 = {true};
-    ros::NodeHandle node_handle;
-    image_transport::ImageTransport image_trans;
-    image_transport::Subscriber image_sub;
-    image_transport::Publisher image_pub;
-    std::vector<cv::Mat> buffer_imgs;
-
-
-public:
-
-qr_scanner_multiThread():image_trans(node_handle){
-
-
-    image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner_multiThread::qr_scannerCallback,this);
-    image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
-
-}
-
-~qr_scanner_multiThread(){
-    cv::destroyAllWindows();
-}
 
 
 // Find and decode barcodes and QR codes
-static void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects, std::atomic<bool> &done)
+static void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects, bool &done)
 {
   done = false;
   // Create zbar scanner
@@ -88,8 +70,9 @@ static void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects, std::
   done = true;
 }
 
+
 void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
-   {
+{
 
     cv_bridge::CvImagePtr cv_ptr;
     try
@@ -107,9 +90,11 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
     std::vector<decodedObject> decodedObjects;
     
     if(done_t1){
-        std::thread t1(decode, cv_ptr->image, decodedObjects, done_t1);
+        std::thread t1(decode, std::ref(cv_ptr->image), std::ref(decodedObjects), std::ref(done_t1));
+        t1.detach();
     }else if(done_t2){
-        std::thread t1(decode, cv_ptr->image, decodedObjects, done_t2);
+        std::thread t2(decode, std::ref(cv_ptr->image), std::ref(decodedObjects), std::ref(done_t2));
+        t2.detach();
     }else{
         return;
     }
@@ -142,15 +127,23 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 
     image_pub.publish(cv_ptr->toImageMsg());
     
-   }
+}
 
-};
+
 
 int main(int argc,  char  **argv)
 {
     ros::init(argc, argv, "qr_scanner_multiThread");
 
-    qr_scanner_multiThread scan_qr();
+    ros::NodeHandle node_handle;
+    image_transport::ImageTransport image_trans(node_handle);
+    image_transport::Subscriber image_sub;
+    std::vector<cv::Mat> buffer_imgs;
+
+    image_sub = image_trans.subscribe("camera_module/video_stream", 1, qr_scannerCallback);
+    image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
+
+    //qr_scanner_multiThread scan_qr();
     
     //ros::param::get("subscriber/height", height);
 
