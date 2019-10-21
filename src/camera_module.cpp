@@ -10,6 +10,7 @@ static const std::string URL = "http://192.168.0.3:8080/video";
 static std::string video_src = "/home/ubuntu/catkin_ws/src/pioneer2/videos/test.mp4";
 static int publish_rate = 10;
 static int height = 800;
+static bool piCamera = true;
 
 int main(int argc, char  **argv)
 {
@@ -24,10 +25,18 @@ int main(int argc, char  **argv)
     ros::param::get("camera_module/publish_rate", publish_rate);
     ros::param::get("camera_module/height", height);
     ros::param::get("camera_module/video_src", video_src);
+    ros::param::get("camera_module/piCamera", piCamera);
     ros::Rate loop_rate(publish_rate);
 
-    cv::VideoCapture cap;
-    cap.open(video_src);
+	cv::VideoCapture cap;
+	
+	if(piCamera){
+		cap.open(0);
+	}else{
+		cap.open(video_src);
+	}
+    
+    
     // wait for camera to setup
     std::this_thread::sleep_for(std::chrono::seconds(2));
 
