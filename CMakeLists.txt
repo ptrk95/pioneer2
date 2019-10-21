@@ -140,6 +140,7 @@ include_directories(
 add_executable(camera_module src/camera_module.cpp)
 add_executable(subscriber src/subscriber.cpp)
 add_executable(qr_scanner src/qr_scanner.cpp)
+add_executable(qr_scanner_multiThread src/qr_scanner_multiThread.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -168,6 +169,12 @@ ${OpenCV_LIBRARIES}
  )
 
 target_link_libraries(qr_scanner
+${zbar_LIBRARIES}
+   ${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+ )
+
+target_link_libraries(qr_scanner_multiThread
 ${zbar_LIBRARIES}
    ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}

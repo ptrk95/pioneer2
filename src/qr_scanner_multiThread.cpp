@@ -7,7 +7,7 @@
 #include "zbar.h"
 #include "vector"
 #include "algorithm"
-#include "mutex"
+#include <atomic>
 #include "thread"
 
 
@@ -20,46 +20,35 @@ typedef struct
   std::vector <cv::Point> location;
 }decodedObject;
 
-class qr_scanner{
+class qr_scanner_multiThread{
+    std::atomic_bool done_t1 = {true};
+    std::atomic_bool done_t2 = {true};
     ros::NodeHandle node_handle;
     image_transport::ImageTransport image_trans;
     image_transport::Subscriber image_sub;
     image_transport::Publisher image_pub;
-    std::mutex mutex_img;
     std::vector<cv::Mat> buffer_imgs;
 
 
 public:
 
-qr_scanner():image_trans(node_handle){
-    image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner::qr_scannerCallback,this);
+qr_scanner_multiThread():image_trans(node_handle){
+
+
+    image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner_multiThread::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
 
 }
 
-~qr_scanner(){
+~qr_scanner_multiThread(){
     cv::destroyAllWindows();
 }
 
-void callback_buffer(const sensor_msgs::ImageConstPtr &msg){
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch(cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    buffer_imgs.push_back(cv_ptr->image);
-}
 
 // Find and decode barcodes and QR codes
-void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects)
+static void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects, std::atomic<bool> &done)
 {
-
+  done = false;
   // Create zbar scanner
   zbar::ImageScanner scanner;
 
@@ -96,6 +85,7 @@ void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects)
 
     decodedObjects.push_back(obj);
   }
+  done = true;
 }
 
 void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
@@ -115,7 +105,14 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
     float scale = float(height)/float(cv_ptr->image.rows);
     
     std::vector<decodedObject> decodedObjects;
-    decode(cv_ptr->image, decodedObjects);
+    
+    if(done_t1){
+        std::thread t1(decode, cv_ptr->image, decodedObjects, done_t1);
+    }else if(done_t2){
+        std::thread t1(decode, cv_ptr->image, decodedObjects, done_t2);
+    }else{
+        return;
+    }
 
     size_t size = decodedObjects.size();
     if(size > 0){
@@ -151,9 +148,9 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 
 int main(int argc,  char  **argv)
 {
-    ros::init(argc, argv, "qr_scanner");
+    ros::init(argc, argv, "qr_scanner_multiThread");
 
-    qr_scanner scan_qr = qr_scanner();
+    qr_scanner_multiThread scan_qr();
     
     //ros::param::get("subscriber/height", height);
 
