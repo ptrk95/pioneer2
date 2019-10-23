@@ -4,6 +4,7 @@
 #include "cv_bridge/cv_bridge.h"
 #include "chrono"
 #include "thread"
+#include "pioneer2/control.h"
 
 static const std::string OPENCV_WINDOW = "Image window";
 static const std::string URL = "http://192.168.0.3:8080/video";
@@ -20,6 +21,11 @@ int main(int argc, char  **argv)
 
     image_transport::Publisher image_pub;
     image_transport::ImageTransport image_trans(node_handle);
+    ros::Publisher pub = node_handle.advertise<pioneer2::control>("robot_control", 2);
+    pioneer2::control message;
+    message.msg = "rotate";
+    message.num = 10;
+    pub.publish(message);
 
     image_pub = image_trans.advertise("camera_module/video_stream", 1);
     ros::param::get("camera_module/publish_rate", publish_rate);
@@ -49,7 +55,7 @@ int main(int argc, char  **argv)
     int counter = 0;
 
     cv::Mat frame;
-
+	
     while(ros::ok()){
 
         

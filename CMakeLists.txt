@@ -117,23 +117,26 @@ catkin_package(
 ###########
 ## Build ##
 ###########
+set(ARIA_HEADER_INCLUDE /usr/local/Aria/include)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
  include
   ${catkin_INCLUDE_DIRS}
+${ARIA_HEADER_INCLUDE}
 )
+
+set(ARIA_HEADER_FILE /usr/local/Aria/include/Aria.h)
+set(ARIA_LIB /usr/local/Aria/lib/libAria.so)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/pioneer2.cpp
 # )
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -142,6 +145,14 @@ add_executable(camera_module src/camera_module.cpp)
 add_executable(visualizer src/visualizer.cpp)
 add_executable(qr_scanner src/qr_scanner.cpp)
 add_executable(qr_scanner_multiThread src/qr_scanner_multiThread.cpp)
+add_executable(robot_controller src/robot_controller.cpp ${ARIA_HEADER_FILE})
+
+## Add cmake target dependencies of the library
+## as an example, code may need to be generated before libraries
+## either from message generation or dynamic reconfigure
+ #add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(camera_module ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(robot_controller ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -179,6 +190,12 @@ target_link_libraries(qr_scanner_multiThread
 ${zbar_LIBRARIES}
    ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
+ )
+
+target_link_libraries(robot_controller
+   ${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${ARIA_LIB}
  )
 
 #############

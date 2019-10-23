@@ -12,3 +12,6 @@ sudo chmod +x install.sh
 
 
 sudo apt-get install libzbar-dev
+
+WiringPi installieren evtl mirror verwenden
+pca9685 das makefile anpassen mit -lcrypt -lrt linken
