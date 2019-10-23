@@ -15,9 +15,11 @@
 #define HERTZ 50
 
 class servo_controller{
-	ros::NodeHandle node_handle;
+	
+	
+	public:
 
-	servo_controller(){
+	servo_controller(ros::NodeHandle &node_handle){
 		// Calling wiringPi setup first.
 		wiringPiSetup();
 
@@ -40,20 +42,25 @@ class servo_controller{
 		pwmWrite(PIN_BASE + 16, tick);
 		delay(2000);
 
-		
+		std::cerr << "test servo cont!\n";
 		//ros::param::get("visualizer/height", height);
 
-		ros::Subscriber cont_sub = node_handle.subscribe("camera_module/servo_control", 4, &servo_controller::controllerCallback,this);
+		ros::Subscriber cont_sub = node_handle.subscribe("visualizer/servo_control", 4, &servo_controller::controllerCallback,this);
+		std::cerr << "test servo cont!\n";
+		std::cerr << cont_sub.getNumPublishers();
 	}
 
 	~servo_controller(){
 	}
 
 	void controllerCallback(const pioneer2::control::ConstPtr &msg){
+		std::cout << "pan_camera sdfsdf";
 		if(msg->msg == "pan_camera"){
 			pan_camera(msg->num);
+			std::cout << "pan_camera horizontal";
 		}else if(msg->msg == "tilt_camera"){
 			pan_camera(msg->num);
+			std::cout << "tilt_camera vertikal";
 		}else if(msg->msg == "drive"){
 
 		}
@@ -116,9 +123,15 @@ class servo_controller{
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "servo_controller");
+	ros::NodeHandle node_handle;
+	ros::Rate r(30);
+	
 
-	servo_controller servo_cont();
+	servo_controller serv_cont = servo_controller(node_handle);
+	while(ros::ok()){
+		ros::spinOnce();
+		r.sleep();
+	}
 
-	ros::spin();
 	return 0;
 }

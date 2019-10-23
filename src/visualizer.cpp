@@ -4,6 +4,7 @@
 #include "image_transport/image_transport.h"
 #include "cv_bridge/cv_bridge.h"
 #include "std_msgs/String.h"
+#include "pioneer2/control.h"
 
 
 static int height = 360;
@@ -39,7 +40,12 @@ int main(int argc,  char  **argv)
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
     image_sub = image_trans.subscribe("qr_scanner/video_stream", 4, imageCallback);
-
+    
+    ros::Publisher pub = node_handle.advertise<pioneer2::control>("visualizer/servo_control", 2);
+	pioneer2::control servo_msg;
+    servo_msg.msg = "pan_camera";
+    servo_msg.num = 45;
+    pub.publish(servo_msg);
     ros::spin();
     cv::destroyAllWindows();
 

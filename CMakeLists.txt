@@ -127,8 +127,15 @@ include_directories(
 ${ARIA_HEADER_INCLUDE}
 )
 
+
+set(WIRINGPI_HEADER_FILE /usr/local/include/wiringPi.h)
+set(WIRINGPI_LIB /usr/local/lib/libwiringPi.so.2.46)
+set(PCA9685_LIB /usr/local/lib/libwiringPiPca9685.so.2.0)
+
+
 set(ARIA_HEADER_FILE /usr/local/Aria/include/Aria.h)
 set(ARIA_LIB /usr/local/Aria/lib/libAria.so)
+
 
 
 ## Declare a C++ library
@@ -146,7 +153,7 @@ add_executable(visualizer src/visualizer.cpp)
 add_executable(qr_scanner src/qr_scanner.cpp)
 add_executable(qr_scanner_multiThread src/qr_scanner_multiThread.cpp)
 add_executable(robot_controller src/robot_controller.cpp ${ARIA_HEADER_FILE})
-add_executable(servo_controller src/servo_controller.cpp)
+add_executable(servo_controller src/servo_controller.cpp ${WIRINGPI_HEADER_FILE})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -201,6 +208,8 @@ ${ARIA_LIB}
 
 target_link_libraries(servo_controller
    ${catkin_LIBRARIES}
+${WIRINGPI_LIB}
+${PCA9685_LIB}
  )
 
 #############
