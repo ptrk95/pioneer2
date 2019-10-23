@@ -16,6 +16,7 @@ void controllerCallback(const pioneer2::control::ConstPtr &msg){
 	robot.setRotVel(msg->num);
 	ArUtil::sleep(2000);
 	robot.stop();
+	robot.stopRunning();
   }
 }
 
@@ -27,7 +28,7 @@ int main(int argc, char **argv)
   ros::NodeHandle node_handle;
   //ros::param::get("visualizer/height", height);
 
-  ros::Subscriber cont_sub = node_handle.subscribe("camera_module/control_robot", 4, controllerCallback);
+  ros::Subscriber cont_sub = node_handle.subscribe("camera_module/robot_control", 4, controllerCallback);
   
 
   Aria::init();
@@ -62,8 +63,11 @@ int main(int argc, char **argv)
   // True parameter means that if the connection is lost, then the 
   // run loop ends.
   robot.runAsync(true);
+	robot.enableMotors();
 
-
+   ArUtil::sleep(2000);
+   
+   
   // wait for the thread to stop
   robot.waitForRunExit();
 

@@ -21,11 +21,11 @@ int main(int argc, char  **argv)
 
     image_transport::Publisher image_pub;
     image_transport::ImageTransport image_trans(node_handle);
-    ros::Publisher pub = node_handle.advertise<pioneer2::control>("robot_control", 2);
+    ros::Publisher pub = node_handle.advertise<pioneer2::control>("camera_module/robot_control", 2);
     pioneer2::control message;
     message.msg = "rotate";
     message.num = 10;
-    pub.publish(message);
+    
 
     image_pub = image_trans.advertise("camera_module/video_stream", 1);
     ros::param::get("camera_module/publish_rate", publish_rate);
@@ -58,7 +58,11 @@ int main(int argc, char  **argv)
 	
     while(ros::ok()){
 
-        
+        if(counter == 0){
+			std::cerr << "IN 5 sec. robot will rotate.";
+			std::this_thread::sleep_for(std::chrono::seconds(5));
+			pub.publish(message);
+		}
         cap >> frame;
         if(frame.empty()){
             std::cerr << "Frame is empty.";
