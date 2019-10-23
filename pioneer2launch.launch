@@ -20,5 +20,8 @@
  <node pkg="pioneer2" name="robot_controller" type="robot_controller" output="screen">
      </node>
 
+<node pkg="pioneer2" name="servo_controller" type="servo_controller" output="screen">
+     </node>
+
 
 </launch>
