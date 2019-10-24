@@ -14,12 +14,16 @@
 #define MAX_PWM 4096
 #define HERTZ 50
 
-class servo_controller{
-	
-	
-	public:
+/**
+	 * Calculate the number of ticks the signal should be high for the required amount of time
+	 */
+	int calcTicks(float impulseMs, int hertz)
+	{
+		float cycleMs = 1000.0f / hertz;
+		return (int)(MAX_PWM * impulseMs / cycleMs + 0.5f);
+	}
 
-	servo_controller(ros::NodeHandle &node_handle){
+	void servo_controller(){
 		// Calling wiringPi setup first.
 		wiringPiSetup();
 
@@ -45,26 +49,12 @@ class servo_controller{
 		std::cerr << "test servo cont!\n";
 		//ros::param::get("visualizer/height", height);
 
-		ros::Subscriber cont_sub = node_handle.subscribe("visualizer/servo_control", 4, &servo_controller::controllerCallback,this);
-		std::cerr << "test servo cont!\n";
-		std::cerr << cont_sub.getNumPublishers();
+		
 	}
 
-	~servo_controller(){
-	}
 
-	void controllerCallback(const pioneer2::control::ConstPtr &msg){
-		std::cout << "pan_camera sdfsdf";
-		if(msg->msg == "pan_camera"){
-			pan_camera(msg->num);
-			std::cout << "pan_camera horizontal";
-		}else if(msg->msg == "tilt_camera"){
-			pan_camera(msg->num);
-			std::cout << "tilt_camera vertikal";
-		}else if(msg->msg == "drive"){
 
-		}
-	}
+	
 
 	float angle_to_milliseconds(int angle){
 		if(angle >= -90 & angle < 0){
@@ -106,17 +96,21 @@ class servo_controller{
 		}
 	}
 
-	/**
-	 * Calculate the number of ticks the signal should be high for the required amount of time
-	 */
-	int calcTicks(float impulseMs, int hertz)
-	{
-		float cycleMs = 1000.0f / hertz;
-		return (int)(MAX_PWM * impulseMs / cycleMs + 0.5f);
+	
+void controllerCallback(const pioneer2::control::ConstPtr &msg){
+		std::cout << "pan_camera sdfsdf";
+		if(msg->msg == "pan_camera"){
+			pan_camera(msg->num);
+			std::cout << "pan_camera horizontal";
+		}else if(msg->msg == "tilt_camera"){
+			pan_camera(msg->num);
+			std::cout << "tilt_camera vertikal";
+		}else if(msg->msg == "drive"){
+
+		}
 	}
 
 
-};
 
 
 
@@ -124,14 +118,12 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "servo_controller");
 	ros::NodeHandle node_handle;
-	ros::Rate r(30);
+	servo_controller();
+	ros::Subscriber cont_sub = node_handle.subscribe("visualizer/servo_control", 4, controllerCallback);
+
+	
 	
 
-	servo_controller serv_cont = servo_controller(node_handle);
-	while(ros::ok()){
-		ros::spinOnce();
-		r.sleep();
-	}
-
+	ros::spin();
 	return 0;
 }
