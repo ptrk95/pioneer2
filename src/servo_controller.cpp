@@ -14,16 +14,14 @@
 #define MAX_PWM 4096
 #define HERTZ 50
 
-/**
-	 * Calculate the number of ticks the signal should be high for the required amount of time
-	 */
-	int calcTicks(float impulseMs, int hertz)
-	{
-		float cycleMs = 1000.0f / hertz;
-		return (int)(MAX_PWM * impulseMs / cycleMs + 0.5f);
-	}
+class servo_controller{
 
-	void servo_controller(){
+	ros::NodeHandle node_handle;
+	ros::Subscriber cont_sub;
+
+	public:
+
+	 servo_controller(){
 		// Calling wiringPi setup first.
 		wiringPiSetup();
 
@@ -48,13 +46,22 @@
 
 		std::cerr << "test servo cont!\n";
 		//ros::param::get("visualizer/height", height);
-
+		ros::Subscriber cont_sub = node_handle.subscribe("visualizer/servo_control", 4, &servo_controller::controllerCallback, this);
 		
 	}
 
+	~servo_controller(){
 
+	}
 
-	
+	/**
+	 * Calculate the number of ticks the signal should be high for the required amount of time
+	 */
+	int calcTicks(float impulseMs, int hertz)
+	{
+		float cycleMs = 1000.0f / hertz;
+		return (int)(MAX_PWM * impulseMs / cycleMs + 0.5f);
+	}
 
 	float angle_to_milliseconds(int angle){
 		if(angle >= -90 & angle < 0){
@@ -111,15 +118,15 @@ void controllerCallback(const pioneer2::control::ConstPtr &msg){
 	}
 
 
-
+};
 
 
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "servo_controller");
-	ros::NodeHandle node_handle;
-	servo_controller();
-	ros::Subscriber cont_sub = node_handle.subscribe("visualizer/servo_control", 4, controllerCallback);
+
+	servo_controller cont = servo_controller();
+	
 
 	
 	
