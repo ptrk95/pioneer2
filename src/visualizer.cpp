@@ -43,8 +43,8 @@ int main(int argc,  char  **argv)
     
     ros::Publisher pub = node_handle.advertise<pioneer2::control>("visualizer/servo_control", 2);
 	pioneer2::control servo_msg;
-    servo_msg.msg = "pan_camera";
-    servo_msg.num = 45;
+    servo_msg.msg = "tilt_camera";
+    servo_msg.num = 120;
     pub.publish(servo_msg);
     ros::spin();
     cv::destroyAllWindows();

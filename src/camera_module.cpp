@@ -12,6 +12,8 @@ static std::string video_src = "/home/ubuntu/catkin_ws/src/pioneer2/videos/test.
 static int publish_rate = 10;
 static int height = 800;
 static bool piCamera = true;
+static int angletestTilt = 0;
+static int angletestPan = 0;
 
 int main(int argc, char  **argv)
 {
@@ -23,13 +25,15 @@ int main(int argc, char  **argv)
     image_transport::ImageTransport image_trans(node_handle);
     ros::Publisher pub = node_handle.advertise<pioneer2::control>("camera_module/robot_control", 2);
     ros::Publisher pub_servo = node_handle.advertise<pioneer2::control>("visualizer/servo_control", 2);
+   ros::param::get("camera_module/angletestPan", angletestPan);
+    ros::param::get("camera_module/angletestTilt", angletestTilt);
     pioneer2::control message;
-    message.msg = "rotate";
-    message.num = 10;
+    message.msg = "pan_camera";
+    message.num = angletestPan;
 
     pioneer2::control servo_msg;
-    servo_msg.msg = "pan_camera";
-    servo_msg.num = 30;
+    servo_msg.msg = "tilt_camera";
+    servo_msg.num = angletestTilt;
     
 
     image_pub = image_trans.advertise("camera_module/video_stream", 1);
@@ -37,6 +41,7 @@ int main(int argc, char  **argv)
     ros::param::get("camera_module/height", height);
     ros::param::get("camera_module/video_src", video_src);
     ros::param::get("camera_module/piCamera", piCamera);
+    
     ros::Rate loop_rate(publish_rate);
 
 	cv::VideoCapture cap;
@@ -66,7 +71,7 @@ int main(int argc, char  **argv)
         if(counter == 0){
 			std::cerr << "IN 2 sec. robot will rotate.";
 			std::this_thread::sleep_for(std::chrono::seconds(2));
-			pub.publish(message);
+			pub_servo.publish(message);
             pub_servo.publish(servo_msg);
             std::cerr << "Published.";
 		}
