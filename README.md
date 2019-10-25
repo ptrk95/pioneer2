@@ -13,3 +13,4 @@ In pioneer2 folder, do:
 sudo chmod +x install.sh
 ./install.sh
 ```
+pusle width anpassen ! http://www.fadstoobsessions.com/Learning-Electronics/Component-Testing/SG90-Servo-Motor.php
