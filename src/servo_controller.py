@@ -12,15 +12,19 @@ class servo_controller:
 
         rospy.Subscriber('visualizer/servo_control', control, self.callback)
 
+# channel 0 tilt and channel 1 pan
     def angle_to_ms(self, angle, channel):
         if(channel == 0):
-            ms = (1+angle*(1./180)) # dont forget the dot "." before "/" !
-            ms = 2.48
+            ms = (0.67+angle*(0.89/90)) # dont forget the dot "." before "/" !
         elif(channel == 1):
-            angle = angle + 90;
-            ms = (1+angle*(1./180)) # dont forget the dot "." before "/" !
-        print(angle)
-        print(ms)
+            if(angle <= 0):
+                angle = -angle
+                ms = 1.56 - angle*(0.9/90)
+            elif(angle > 0):
+                ms = 1.56 + angle*(1.1/90)
+            #angle = angle + 90;
+            #ms = (0.67+angle*(0.89/90)) # dont forget the dot "." before "/" 
+            #ms = rospy.get_param('test_pulse', default=0.67) # 1.56
         
         return ms;
 
@@ -46,10 +50,10 @@ class servo_controller:
             print("Only angles between -90 and 90 allowed to pan camera.")
         
     def tilt_camera(self, angle):
-        if(angle >= 0 and angle <= 180):
+        if(angle >= 0 and angle <= 90):
             self.set_angle(angle, 0)
         else:
-            print("Only angles between 0 and 180 allowed to tilt camera.")
+            print("Only angles between 0 and 90 allowed to tilt camera.")
         
     def callback(self, data):
         if(data.msg == "tilt_camera"):
@@ -63,6 +67,7 @@ class servo_controller:
 def main():
     serv_cont = servo_controller()
     rospy.init_node('servo_controller', anonymous=True)
+    
     try:
         rospy.spin()
     except KeyboardInterrupt:

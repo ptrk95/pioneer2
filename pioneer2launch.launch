@@ -5,7 +5,7 @@
 	<param name="piCamera" type="bool" value="true" />
 	<param name="height" type="int" value="960" />
 	<param name="video_src" type="string" value="http://192.168.0.2:8080/video" />
-<param name="angletestPan" type="int" value="-90" />
+<param name="angletestPan" type="int" value="0" />
 <param name="angletestTilt" type="int" value="0" />
      </node>
 
@@ -23,7 +23,9 @@
      </node>
 
 <node pkg="pioneer2" name="servo_controller" type="servo_controller.py" output="screen">
+	<param name="test_pulse" type="double" value="0.60" />
      </node>
+
 
 
 </launch>
