@@ -23,7 +23,8 @@
      </node>
 
 <node pkg="pioneer2" name="servo_controller" type="servo_controller.py" output="screen">
-	<param name="test_pulse" type="double" value="0.60" />
+	<param name="std_tilt" type="int" value="0" />
+	<param name="std_pan" type="int" value="0" />
      </node>
 
 

@@ -32,10 +32,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
 int main(int argc,  char  **argv)
 {
-    ros::init(argc, argv, "visualizer");
+    ros::init(argc, argv, "master");
 
     ros::NodeHandle node_handle;
-    ros::param::get("visualizer/height", height);
 
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
