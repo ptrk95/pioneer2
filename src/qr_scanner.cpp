@@ -3,7 +3,7 @@
 
 #include "image_transport/image_transport.h"
 #include "cv_bridge/cv_bridge.h"
-#include "std_msgs/String.h"
+#include "std_msgs/Int32MultiArray.h"
 #include "zbar.h"
 #include "vector"
 #include "algorithm"
@@ -11,6 +11,8 @@
 //height of region of interest
 static int height_roi = 400;
 static int width_roi = 640;
+
+static std::string QrRegistered = "test";
 
 typedef struct
 {
@@ -24,13 +26,16 @@ class qr_scanner{
     image_transport::ImageTransport image_trans;
     image_transport::Subscriber image_sub;
     image_transport::Publisher image_pub;
+    ros::Publisher pub_qrPos;
 
 
 public:
 
-qr_scanner():image_trans(node_handle){
+qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
+    
     image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
+    pub_qrPos = node_handle.advertise<std_msgs::Int32MultiArray>("qr_scanner/qr_pos", 1);
 }
 
 ~qr_scanner(){
@@ -105,24 +110,30 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
         ROS_INFO("\nobjects: %zu", size);
         // Loop over all decoded objects
         for(int i = 0; i < size; i++)
-        {
-            std::vector<cv::Point> points = decodedObjects[i].location;
-            std::vector<cv::Point> hull;
-            
-            // If the points do not form a quad, find convex hull
-            if(points.size() > 4)
-                cv::convexHull(points, hull);
-            else
-                hull = points;
-            
-            // Number of points in the convex hull
-            int n = hull.size();
-            
-            for(int j = 0; j < n; j++)
-            {
-                cv::line(roi, hull[j], hull[ (j+1) % n], cv::Scalar(255,0,0), 3);
+        { 
+            if(decodedObjects[i].data == QrRegistered){
+
+                std::vector<cv::Point> points = decodedObjects[i].location;
+                std::vector<cv::Point> hull;
+                
+                // If the points do not form a quad, find convex hull
+                if(points.size() > 4)
+                    cv::convexHull(points, hull);
+                else
+                    hull = points;
+                
+                // Number of points in the convex hull
+                int n = hull.size();
+                
+                for(int j = 0; j < n; j++)
+                {
+                    cv::line(roi, hull[j], hull[ (j+1) % n], cv::Scalar(255,0,0), 3);
+                }
+
+                std_msgs::Int32MultiArray pos = std_msgs::Int32MultiArray();
+                pos.data = {points[2].x, points[2].y};
+                pub_qrPos.publish(pos);
             }
-            
         }
     }
 
@@ -139,7 +150,9 @@ int main(int argc,  char  **argv)
     ros::param::get("qr_scanner/height_roi", height_roi);
     ros::param::get("qr_scanner/width_roi", width_roi);
 
-    qr_scanner scan_qr = qr_scanner();
+    ros::NodeHandle node_handle;
+
+    qr_scanner scan_qr = qr_scanner(node_handle);
     
     //ros::param::get("subscriber/height", height);
 
