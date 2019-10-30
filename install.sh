@@ -6,6 +6,9 @@ sudo apt-get install libzbar-dev
 git submodule update --init --recursive
 git pull --recurse-submodules
 
+sudo apt-get install build-essential python-dev python-smbus i2c-tools python-pip --yes
+sudo pip install Adafruit-PCA9685
+
 cd ~/catkin_ws/src/pioneer2/WiringPi/
 ./build
 
