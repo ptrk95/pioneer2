@@ -151,6 +151,7 @@ set(ARIA_LIB /usr/local/Aria/lib/libAria.so)
 add_executable(camera_module src/camera_module.cpp)
 add_executable(visualizer src/visualizer.cpp)
 add_executable(qr_scanner src/qr_scanner.cpp)
+add_executable(master src/master.cpp)
 add_executable(qr_scanner_multiThread src/qr_scanner_multiThread.cpp)
 add_executable(robot_controller src/robot_controller.cpp ${ARIA_HEADER_FILE})
 #add_executable(servo_controller src/servo_controller.cpp ${WIRINGPI_HEADER_FILE})
@@ -201,6 +202,11 @@ ${OpenCV_LIBRARIES}
  )
 
 target_link_libraries(robot_controller
+   ${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${ARIA_LIB}
+ )
+target_link_libraries(master
    ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
 ${ARIA_LIB}

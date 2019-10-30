@@ -39,7 +39,7 @@ int main(int argc,  char  **argv)
 
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
-    image_sub = image_trans.subscribe("qr_scanner/video_stream", 4, imageCallback);
+    image_sub = image_trans.subscribe("master/video_stream", 1, imageCallback);
     
 
 

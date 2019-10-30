@@ -35,7 +35,7 @@ qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
     
     image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
-    pub_qrPos = node_handle.advertise<std_msgs::Int32MultiArray>("qr_scanner/qr_pos", 1);
+    pub_qrPos = node_handle.advertise<std_msgs::Int32MultiArray>("qr_scanner/qr_pos", 2);
 }
 
 ~qr_scanner(){
@@ -106,8 +106,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
     decode(roi, decodedObjects);
 
     size_t size = decodedObjects.size();
-    if(size > 0){
-        ROS_INFO("\nobjects: %zu", size);
+
         // Loop over all decoded objects
         for(int i = 0; i < size; i++)
         { 
@@ -135,7 +134,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 pub_qrPos.publish(pos);
             }
         }
-    }
+    
 
     image_pub.publish(cv_ptr->toImageMsg());
     

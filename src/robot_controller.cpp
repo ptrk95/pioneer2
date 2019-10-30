@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   ros::NodeHandle node_handle;
   //ros::param::get("visualizer/height", height);
 
-  ros::Subscriber cont_sub = node_handle.subscribe("camera_module/robot_control", 4, controllerCallback);
+  ros::Subscriber cont_sub = node_handle.subscribe("camera_module/robot_control", 2, controllerCallback);
   
 
   Aria::init();
