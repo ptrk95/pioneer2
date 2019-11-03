@@ -2,8 +2,6 @@
 #include "opencv2/opencv.hpp"
 #include "image_transport/image_transport.h"
 #include "cv_bridge/cv_bridge.h"
-#include "chrono"
-#include "thread"
 #include "pioneer2/control.h"
 
 static const std::string OPENCV_WINDOW = "Image window";
@@ -54,7 +52,7 @@ int main(int argc, char  **argv)
     
     
     // wait for camera to setup
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    ros::Duration(2).sleep();
 
     if(!cap.isOpened()){
         std::cerr << "Can't open video. Please check path of param 'video_src' in pioneer2launch.launch!";
@@ -65,24 +63,38 @@ int main(int argc, char  **argv)
     int counter = 0;
 
     cv::Mat frame;
+
+    // fixed 1920x1080 capture size
+    float scale = float(height)/float(1080);
+    float width = scale * 1920;
+
+ 
+    if(!cap.set(CV_CAP_PROP_FRAME_WIDTH, width)){
+        std::cout <<"SUCCESS\n";
+    }else{
+        std::cout <<"FAIL\n";
+    }
+
+
+    if(!cap.set(CV_CAP_PROP_FRAME_HEIGHT, height)){
+        std::cout <<"SUCCESS\n";
+    }else{
+        std::cout <<"FAIL\n";
+    }
+
+    if(!cap.set(CV_CAP_PROP_FPS, publish_rate)){
+        std::cout <<"SUCCESS\n";
+    }else{
+        std::cout <<"FAIL\n";
+    }
 	
     while(ros::ok()){
 
-        if(counter == 0){
-			std::cerr << "IN 2 sec. robot will rotate.";
-			std::this_thread::sleep_for(std::chrono::seconds(2));
-			pub_servo.publish(message);
-            pub_servo.publish(servo_msg);
-            std::cerr << "Published.";
-		}
         cap >> frame;
         if(frame.empty()){
             std::cerr << "Frame is empty.";
             return 1;
         }
-
-        float scale = float(height)/float(frame.rows);
-        cv::resize(frame, frame, cv::Size(0,0),scale, scale, CV_INTER_AREA);
 
         //cv::cvtColor(frame, frame, CV_RGB2BGR);
 
