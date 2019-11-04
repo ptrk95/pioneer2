@@ -27,12 +27,15 @@ class qr_scanner{
     image_transport::Subscriber image_sub;
     image_transport::Publisher image_pub;
     ros::Publisher pub_qrPos;
+    // Create zbar scanner
+    zbar::ImageScanner scanner;
 
 
 public:
 
 qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
-    
+    // Configure scanner
+    scanner.set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
     image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
     pub_qrPos = node_handle.advertise<std_msgs::Int32MultiArray>("qr_scanner/qr_pos", 2);
@@ -46,11 +49,6 @@ qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
 void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects)
 {
 
-  // Create zbar scanner
-  zbar::ImageScanner scanner;
-
-  // Configure scanner
-  scanner.set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
 
   // Convert image to grayscale
   cv::Mat imGray;
@@ -70,9 +68,6 @@ void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects)
     obj.type = symbol->get_type_name();
     obj.data = symbol->get_data();
 
-    // Print type and data
-    std::cout << "Type : " << obj.type << std::endl;
-    std::cout << "Data : " << obj.data << std::endl << std::endl;
 
     // Obtain location
     for(int i = 0; i< symbol->get_location_size(); i++)
@@ -137,6 +132,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
     
 
     image_pub.publish(cv_ptr->toImageMsg());
+
     
    }
 

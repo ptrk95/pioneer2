@@ -7,7 +7,7 @@
 #include "pioneer2/control.h"
 
 
-static int height = 360;
+int height = 360;
 
 void imageCallback(const sensor_msgs::ImageConstPtr &msg)
    {
