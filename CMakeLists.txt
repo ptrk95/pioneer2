@@ -191,6 +191,7 @@ ${zbar_LIBRARIES}
 ${OpenCV_LIBRARIES}
  )
 
+
 target_link_libraries(qr_scanner_multiThread
 ${zbar_LIBRARIES}
    ${catkin_LIBRARIES}

@@ -51,11 +51,11 @@ void decode(cv::Mat &im, std::vector<decodedObject>&decodedObjects)
 
 
   // Convert image to grayscale
-  cv::Mat imGray;
-  cvtColor(im, imGray,CV_BGR2GRAY);
+  //cv::Mat imGray;
+  //cvtColor(im, imGray,CV_BGR2GRAY);
 
   // Wrap image data in a zbar image
-  zbar::Image image(im.cols, im.rows, "Y800", (uchar *)imGray.data, im.cols * im.rows);
+  zbar::Image image(im.cols, im.rows, "Y800", (uchar *)im.data, im.cols * im.rows);
 
   // Scan the image for barcodes and QRCodes
   int n = scanner.scan(image);
@@ -92,13 +92,30 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
+
     
     //float scale = float(height)/float(cv_ptr->image.rows);
     cv::Rect roi_rect = cv::Rect((cv_ptr->image.cols - width_roi)/2, (cv_ptr->image.rows - height_roi)/2, width_roi, height_roi);
     cv::Mat roi = cv_ptr->image(roi_rect);
+
+	int scale = 2;
+    cv::Mat image;
+    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_AREA);
+
     cv::rectangle(cv_ptr->image, roi_rect, cv::Scalar(0,0,255), 2);
+	
+	cv::Mat gray_roi;
+	cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+	cv::cvtColor(roi, gray_roi, CV_BGR2GRAY );
+
+	cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 199, 5);
+	
+	cv::erode(gray_roi, gray_roi, kernel);
+
     std::vector<decodedObject> decodedObjects;
-    decode(roi, decodedObjects);
+    decode(gray_roi, decodedObjects);
+
+	cv::Point scalePoint = cv::Point((cv_ptr->image.cols - width_roi)/2, (cv_ptr->image.rows - height_roi)/2);
 
     size_t size = decodedObjects.size();
 
@@ -121,7 +138,8 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 
                 for(int j = 0; j < n; j++)
                 {
-                    cv::line(roi, hull[j], hull[ (j+1) % n], cv::Scalar(255,0,0), 3);
+					
+                    cv::line(cv_ptr->image, hull[j]/scale +scalePoint, hull[ (j+1) % n]/scale + scalePoint, cv::Scalar(255,0,0), 3);
                 }
 
                 std_msgs::Int32MultiArray pos = std_msgs::Int32MultiArray();
@@ -129,7 +147,8 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 pub_qrPos.publish(pos);
             }
         }
-    
+    cv::imshow("roi", gray_roi);
+    cv::waitKey(1);
 
     image_pub.publish(cv_ptr->toImageMsg());
 
