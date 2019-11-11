@@ -17,11 +17,11 @@ std::queue<std::vector<int>> qr_positions = std::queue<std::vector<int>>();
 void drawLine(cv::Mat &img){
     if(!qr_positions.empty()){
         if(qr_positions.size() >= 2){
-			cv::Rect roi_rect = cv::Rect((img.cols - width_roi)/2, (img.rows - height_roi)/2, width_roi, height_roi);
-			cv::Mat roi = img(roi_rect);
+			//cv::Rect roi_rect = cv::Rect((img.cols - width_roi)/2, (img.rows - height_roi)/2, width_roi, height_roi);
+			//cv::Mat roi = img(roi_rect);
             std::vector<int> pos2 = qr_positions.front();
             std::vector<int> pos1 = qr_positions.back();
-            cv::line(roi, cv::Point(pos1[0], pos1[1]) , cv::Point(pos2[0], pos2[1]), cv::Scalar(255,0,0), 3);
+            cv::line(img, cv::Point(pos1[0], pos1[1]) , cv::Point(pos2[0], pos2[1]), cv::Scalar(255,0,0), 3);
             qr_positions.pop();
         }
     }

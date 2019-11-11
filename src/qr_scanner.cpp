@@ -9,8 +9,9 @@
 #include "algorithm"
 
 //height of region of interest
-static int height_roi = 400;
-static int width_roi = 640;
+int height_roi = 400;
+int width_roi = 640;
+float scale = 2;
 
 static std::string QrRegistered = "test";
 
@@ -98,19 +99,29 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
     cv::Rect roi_rect = cv::Rect((cv_ptr->image.cols - width_roi)/2, (cv_ptr->image.rows - height_roi)/2, width_roi, height_roi);
     cv::Mat roi = cv_ptr->image(roi_rect);
 
-	int scale = 2;
+	
     cv::Mat image;
-    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_AREA);
+    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_CUBIC);
 
     cv::rectangle(cv_ptr->image, roi_rect, cv::Scalar(0,0,255), 2);
 	
+	
 	cv::Mat gray_roi;
-	cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+	//cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
 	cv::cvtColor(roi, gray_roi, CV_BGR2GRAY );
 
-	cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 199, 5);
+	//cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 3);
+	//cv::threshold(gray_roi, gray_roi, 127, 255, cv::THRESH_BINARY);
+	//cv::erode(gray_roi, gray_roi, kernel);
+
+	//cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 13, 3);
+	//cv::Mat sharpeningKernel = (cv::Mat_<int>(3,3) << 0, -1, 0, -1, 5, -1, 0, -1, 0);
+	//cv::Mat tmp_roi = gray_roi;
+	//cv::filter2D(tmp_roi, gray_roi, -1, sharpeningKernel);
+	//cv::GaussianBlur(tmp_roi, gray_roi, cv::Size(0, 0), 3);
+	//cv::addWeighted(tmp_roi, 1.5, gray_roi, -0.5, 0, gray_roi);
+
 	
-	cv::erode(gray_roi, gray_roi, kernel);
 
     std::vector<decodedObject> decodedObjects;
     decode(gray_roi, decodedObjects);
@@ -143,7 +154,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 }
 
                 std_msgs::Int32MultiArray pos = std_msgs::Int32MultiArray();
-                pos.data = {points[2].x, points[2].y};
+                pos.data = { int(points[2].x/scale +scalePoint.x), int(points[2].y/scale +scalePoint.y)};
                 pub_qrPos.publish(pos);
             }
         }
@@ -163,6 +174,7 @@ int main(int argc,  char  **argv)
 
     ros::param::get("qr_scanner/height_roi", height_roi);
     ros::param::get("qr_scanner/width_roi", width_roi);
+	ros::param::get("qr_scanner/scale", scale);
 
     ros::NodeHandle node_handle;
 
