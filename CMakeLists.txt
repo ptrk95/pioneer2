@@ -17,6 +17,19 @@ find_package(catkin REQUIRED COMPONENTS
 message_generation
 )
 
+## Generate messages in the 'msg' folder
+ add_message_files(
+   FILES
+   control.msg
+#   Message2.msg
+ )
+
+## Generate added messages and services with any dependencies listed here
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -51,12 +64,7 @@ message_generation
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
- add_message_files(
-   FILES
-   control.msg
-#   Message2.msg
- )
+
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -72,11 +80,7 @@ message_generation
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
- )
+
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -152,7 +156,7 @@ set(ARIA_LIB /usr/local/Aria/lib/libAria.so)
 add_executable(visualizer src/visualizer.cpp)
 add_executable(qr_scanner src/qr_scanner.cpp)
 add_executable(master src/master.cpp)
-add_executable(qr_scanner_multiThread src/qr_scanner_multiThread.cpp)
+#add_executable(qr_scanner_multiThread src/qr_scanner_multiThread.cpp)
 add_executable(robot_controller src/robot_controller.cpp ${ARIA_HEADER_FILE})
 #add_executable(servo_controller src/servo_controller.cpp ${WIRINGPI_HEADER_FILE})
 
@@ -161,6 +165,8 @@ add_executable(robot_controller src/robot_controller.cpp ${ARIA_HEADER_FILE})
 ## either from message generation or dynamic reconfigure
  #add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(robot_controller ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(qr_scanner ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(master ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -192,11 +198,11 @@ ${OpenCV_LIBRARIES}
  )
 
 
-target_link_libraries(qr_scanner_multiThread
-${zbar_LIBRARIES}
-   ${catkin_LIBRARIES}
-${OpenCV_LIBRARIES}
- )
+#target_link_libraries(qr_scanner_multiThread
+#${zbar_LIBRARIES}
+ #  ${catkin_LIBRARIES}
+#${OpenCV_LIBRARIES}
+# )
 
 target_link_libraries(robot_controller
    ${catkin_LIBRARIES}
