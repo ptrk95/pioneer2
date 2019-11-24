@@ -5,13 +5,20 @@
 
 ArRobot robot;
 
+// add Actions for automatic driving
+  ArActionLimiterForwards limiter("speed limiter near", 350, 800, 200); // arguments: name, stopDistance mm, slowDownDistance mm, maxSeed mm/sec
+  ArActionLimiterForwards limiterFar("speed limiter far", 400, 1250, 300);
+  ArActionConstantVelocity drive("drive", 350); // 400mm/sec
+  ArActionStop stop("stop");
+
 void controllerCallback(const pioneer2::control::ConstPtr &msg){
   if(msg->msg == "stop_now"){
     robot.stopRunning();
   }else if(msg->msg == "stop"){
+    drive.deactivate();
     robot.stop();
   }else if(msg->msg == "drive"){
-
+    drive.activate();
   }else if(msg->msg == "rotate"){
 	robot.setRotVel(msg->num);
 	ArUtil::sleep(2000);
@@ -57,7 +64,10 @@ int main(int argc, char **argv)
     return 1;
   }
   
-  ArLog::log(ArLog::Normal, "simpleMotionCommands: Connected.");
+  ArLog::log(ArLog::Normal, "Robot successfully connected.");
+
+    // Sonar for basic obstacle avoidance
+  ArSonarDevice sonar;
 
   // Start the robot processing cycle running in the background.
   // True parameter means that if the connection is lost, then the 
@@ -65,7 +75,17 @@ int main(int argc, char **argv)
   robot.runAsync(true);
 	robot.enableMotors();
 
-   ArUtil::sleep(2000);
+  ArUtil::sleep(2000);
+  
+  // Add the sonar to the robot
+  robot.addRangeDevice(&sonar);
+
+  robot.addAction(&limiter, 100);
+  robot.addAction(&limiterFar, 90);
+  robot.addAction(&drive, 60);
+  robot.addAction(&stop, 10);
+
+  drive.deactivate();
    
    
   // wait for the thread to stop
