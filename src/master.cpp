@@ -11,7 +11,7 @@ static int height_roi = 400;
 static int width_roi = 640;
 
 image_transport::Publisher pub;
-
+ros::Publisher pub_robot;
 std::queue<std::vector<int>> qr_positions = std::queue<std::vector<int>>();
 
 void drawLine(cv::Mat &img){
@@ -28,7 +28,11 @@ void drawLine(cv::Mat &img){
 }
 
 void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
+    pioneer2::control cont_msg = pioneer2::control();
+    cont_msg.msg = "stop";
+    cont_msg.num = 0;
     if(!qr_positions.empty()){
+        cont_msg.msg = "drive";
         if(qr_positions.size() <= 4){
             qr_positions.push(msg.data);
         }else{
@@ -83,6 +87,7 @@ int main(int argc,  char  **argv)
     qr_pos_sub = node_handle.subscribe("qr_scanner/qr_pos", 1, qr_pos_Callback);
     
     pub = image_trans.advertise("master/video_stream", 1);
+    pub_robot = node_handle.advertise<pioneer2::control>("master/robot_control", 1);
 	
     ros::spin();
    

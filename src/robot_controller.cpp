@@ -13,12 +13,18 @@ ArRobot robot;
 
 void controllerCallback(const pioneer2::control::ConstPtr &msg){
   if(msg->msg == "stop_now"){
-    robot.stopRunning();
-  }else if(msg->msg == "stop"){
     drive.deactivate();
     robot.stop();
+    robot.stopRunning();
+  }else if(msg->msg == "stop"){
+    if(drive.isActive()){
+      drive.deactivate();
+    }
+    robot.stop();
   }else if(msg->msg == "drive"){
-    drive.activate();
+    if(!drive.isActive()){
+      drive.activate();
+    }
   }else if(msg->msg == "rotate"){
 	robot.setRotVel(msg->num);
 	ArUtil::sleep(2000);
@@ -35,7 +41,7 @@ int main(int argc, char **argv)
   ros::NodeHandle node_handle;
   //ros::param::get("visualizer/height", height);
 
-  ros::Subscriber cont_sub = node_handle.subscribe("camera_module/robot_control", 2, controllerCallback);
+  ros::Subscriber cont_sub = node_handle.subscribe("master/robot_control", 2, controllerCallback);
   
 
   Aria::init();
