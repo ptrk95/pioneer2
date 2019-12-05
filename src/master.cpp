@@ -10,6 +10,10 @@
 static int height_roi = 400;
 static int width_roi = 640;
 
+int width = 640;
+
+pioneer2::control cont_msg = pioneer2::control();
+
 image_transport::Publisher pub;
 ros::Publisher pub_robot;
 std::queue<std::vector<int>> qr_positions = std::queue<std::vector<int>>();
@@ -27,12 +31,19 @@ void drawLine(cv::Mat &img){
     }
 }
 
+
+
 void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
-    pioneer2::control cont_msg = pioneer2::control();
-    cont_msg.msg = "stop";
-    cont_msg.num = 0;
+    
     if(!qr_positions.empty()){
-        cont_msg.msg = "drive";
+        
+	std::vector<int> pos = msg.data;
+int offset = (width - width_roi) /2;
+if(pos[0] <= offset + width_roi*0.25){
+cont_msg.msg = "turn_left";
+}else if(pos[0]>= offset + width_roi*0.75){
+cont_msg.msg = "turn_right";
+}else{cont_msg.msg = "drive";}
         if(qr_positions.size() <= 4){
             qr_positions.push(msg.data);
         }else{
@@ -42,8 +53,8 @@ void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
     }else{
         qr_positions.push(msg.data);
     }
-pub_robot.publish(cont_msg);
 }
+
 
 void imageCallback(const sensor_msgs::ImageConstPtr &msg)
 {
@@ -65,6 +76,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr &msg)
     
 }
 
+
+
 void clear( std::queue<std::vector<int>> &q )
 {
    std::queue<std::vector<int>> empty;
@@ -79,6 +92,7 @@ int main(int argc,  char  **argv)
     
     ros::param::get("qr_scanner/height_roi", height_roi);
     ros::param::get("qr_scanner/width_roi", width_roi);
+ros::param::get("camera_module/width", width);
 
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
@@ -86,11 +100,25 @@ int main(int argc,  char  **argv)
 
     ros::Subscriber qr_pos_sub;
     qr_pos_sub = node_handle.subscribe("qr_scanner/qr_pos", 1, qr_pos_Callback);
-    
+    ros::NodeHandle nh;
     pub = image_trans.advertise("master/video_stream", 1);
-    pub_robot = node_handle.advertise<pioneer2::control>("master/robot_control", 1);
+    pub_robot = nh.advertise<pioneer2::control>("master/robot_control", 1);
 	
-    ros::spin();
+cont_msg.msg = "stop";
+    cont_msg.num = 0;
+ros::Rate loop_rate(2);
+
+while(ros::ok()){
+
+
+pub_robot.publish(cont_msg);
+cont_msg.msg = "stop";
+    cont_msg.num = 0;
+ros::spinOnce();
+loop_rate.sleep();
+
+}
+   
    
     clear(qr_positions);
 

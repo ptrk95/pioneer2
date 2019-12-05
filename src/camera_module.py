@@ -22,23 +22,21 @@ def Camera():
 
 
     rospy.init_node('camera_module', anonymous=True)
-    rate = rospy.Rate(pub_rate) # 10hz
+    rate = rospy.Rate(pub_rate) 
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height)	
+    cap.set(cv2.CAP_PROP_FPS, 30)
 
-    with picamera.PiCamera() as camera:
-        with picamera.array.PiRGBArray(camera) as stream:
-            camera.resolution = (width, height)
-            while not rospy.is_shutdown():
-                camera.capture(stream, 'bgr', use_video_port=True)
-                frame = stream.array
-                try:
-                    pub_img1.publish(cv_bridge.cv2_to_imgmsg(frame, "bgr8"))
-                except CvBridgeError as e:
-                    print(e)
-                    rospy.logerr(e)
-                    
-                stream.seek(0)
-                stream.truncate()
-                rate.sleep()
+    while not rospy.is_shutdown():
+        ret, frame = cap.read()
+        try:
+            pub_img1.publish(cv_bridge.cv2_to_imgmsg(frame, "bgr8"))
+        except CvBridgeError as e:
+            print(e)
+            rospy.logerr(e)
+        rate.sleep()
+    
 
 
 if __name__ == '__main__':

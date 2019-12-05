@@ -101,7 +101,10 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 
 	
     cv::Mat image;
-    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_CUBIC);
+	if(scale!=1){
+
+    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_AREA);
+}
 
     cv::rectangle(cv_ptr->image, roi_rect, cv::Scalar(0,0,255), 2);
 	
@@ -149,12 +152,13 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 
                 for(int j = 0; j < n; j++)
                 {
-					
+		
                     cv::line(cv_ptr->image, hull[j]/scale +scalePoint, hull[ (j+1) % n]/scale + scalePoint, cv::Scalar(255,0,0), 3);
                 }
-
+		
+		cv::Point middle_pos( points[1].x+ ((points[2].x-points[1].x)/2), points[0].y +((points[1].y-points[0].y)/2));
                 std_msgs::Int32MultiArray pos = std_msgs::Int32MultiArray();
-                pos.data = { int(points[2].x/scale +scalePoint.x), int(points[2].y/scale +scalePoint.y)};
+                pos.data = { int(middle_pos.x/scale +scalePoint.x), int(middle_pos.y/scale +scalePoint.y)};
                 pub_qrPos.publish(pos);
             }
         }

@@ -1,10 +1,10 @@
 <launch>
  
      <node pkg="pioneer2" name="camera_module" type="camera_module.py" output="screen">
-	<param name="publish_rate" type="int" value="60" />
+	<param name="publish_rate" type="int" value="30" />
 	<param name="piCamera" type="bool" value="true" />
 	<param name="height" type="int" value="480" />
-	<param name="width" type="int" value="620" />
+	<param name="width" type="int" value="640" />
 	<param name="video_src" type="string" value="http://192.168.0.2:8080/video" />
 <param name="angletestPan" type="int" value="0" />
 <param name="angletestTilt" type="int" value="0" />
@@ -12,9 +12,9 @@
 
 
      <node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
-	<param name="height_roi" type="int" value="220" />
-	<param name="width_roi" type="int" value="310" />
-<param name="scale" type="double" value="2" />
+	<param name="height_roi" type="int" value="300" />
+	<param name="width_roi" type="int" value="400" />
+<param name="scale" type="double" value="1" />
      </node>
 
  <node pkg="pioneer2" name="robot_controller" type="robot_controller" output="screen">
