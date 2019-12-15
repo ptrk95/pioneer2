@@ -3,6 +3,33 @@ import rospy
 from pioneer2.msg import control
 
 import Adafruit_PCA9685
+from threading import Timer
+
+wait = False
+wait_t = False
+
+class Timer_(object):
+
+    def __init__(self, time, sleeper, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.timer = None
+        self.time = time
+        self.sleeper = sleeper
+
+    def callback(self):
+        global wait, wait_t
+        if(self.sleeper):
+            wait = False
+        else:
+            wait_t = False
+
+    def cancel(self):
+        self.timer.cancel()
+
+    def start(self):
+        self.timer = Timer(self.time, self.callback)
+        self.timer.start()
 
 class servo_controller:
     def __init__(self):
@@ -10,7 +37,11 @@ class servo_controller:
         self.freq = 50
         self.pwm.set_pwm_freq(self.freq)
         self.set_standard_pos()
-        rospy.Subscriber('visualizer/servo_control', control, self.callback)
+        self.pos_tilt = 0
+        self.pos_pan = 0
+        rospy.Subscriber('master/servo_control', control, self.callback)
+        self.timer = Timer_(1.0, True)
+        self.timer_t = Timer_(1.0, False)
 
     
     def set_standard_pos(self):
@@ -61,15 +92,37 @@ class servo_controller:
             self.set_angle(angle, 0)
         else:
             print("Only angles between 0 and 90 allowed to tilt camera.")
-        
+
+    # Tilt camera relative to current position by angle degrees.
+    def tilt_camera_rel(self, angle):
+        if(self.pos_tilt + angle >= 0 and self.pos_tilt + angle <= 90):
+            self.tilt_camera(angle + self.pos_tilt)
+            self.pos_tilt = self.pos_tilt + angle
+        else:
+            print("Reached max or min angle to tilt camera.")
+
+    # Pan camera relative to current position by angle degrees.
+    def pan_camera_rel(self, angle):
+        if(self.pos_pan + angle >= -80 and self.pos_pan + angle <= 80):
+            self.pan_camera(angle + self.pos_pan)
+            self.pos_pan = self.pos_pan + angle
+        else:
+            print("Reached max or min angle to pan camera.")
+
     def callback(self, data):
-        if(data.msg == "tilt_camera"):
-            self.tilt_camera(data.num)
-        if(data.msg == "pan_camera"):
-            self.pan_camera(data.num)
+        global wait, wait_t
+        if(data.msg == "tilt_camera" and not wait_t):
+            self.tilt_camera_rel(data.num)
+            wait_t = True
+            self.timer_t.start()
+        if(data.msg == "pan_camera" and not wait):
+            self.pan_camera_rel(data.num)
+            wait = True
+            self.timer.start()
+        
 
     def __del__(self):
-	self.pwm = Adafruit_PCA9685.PCA9685(address=0x40)
+        self.pwm = Adafruit_PCA9685.PCA9685(address=0x40)
  
 def main():
     serv_cont = servo_controller()

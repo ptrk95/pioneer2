@@ -11,6 +11,7 @@ project(pioneer2)
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   roscpp
+  rospy
   sensor_msgs
   std_msgs
   image_transport
@@ -114,7 +115,7 @@ message_generation
 catkin_package(
   #INCLUDE_DIRS include
   #LIBRARIES pioneer2
-  CATKIN_DEPENDS cv_bridge roscpp image_transport std_msgs message_runtime
+  CATKIN_DEPENDS cv_bridge rospy roscpp image_transport std_msgs message_runtime
   #DEPENDS system_lib
 )
 

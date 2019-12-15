@@ -11,11 +11,14 @@ static int height_roi = 400;
 static int width_roi = 640;
 
 int width = 640;
+int height = 480;
 
 pioneer2::control cont_msg = pioneer2::control();
+pioneer2::control servo_msg = pioneer2::control();
 
 image_transport::Publisher pub;
 ros::Publisher pub_robot;
+ros::Publisher pub_servo;
 std::queue<std::vector<int>> qr_positions = std::queue<std::vector<int>>();
 
 void drawLine(cv::Mat &img){
@@ -40,10 +43,27 @@ void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
 	std::vector<int> pos = msg.data;
 int offset = (width - width_roi) /2;
 if(pos[0] <= offset + width_roi*0.25){
-cont_msg.msg = "turn_left";
+//cont_msg.msg = "turn_left";
+servo_msg.msg = "pan_camera";
+servo_msg.num = 15;
 }else if(pos[0]>= offset + width_roi*0.75){
-cont_msg.msg = "turn_right";
-}else{cont_msg.msg = "drive";}
+//cont_msg.msg = "turn_right";
+servo_msg.msg = "pan_camera";
+servo_msg.num = -15;
+}else{
+cont_msg.msg = "drive";
+}
+
+int offset_h = (height - height_roi) /2;
+if(pos[1] <= offset_h + height_roi*0.25){
+servo_msg.msg = "tilt_camera";
+servo_msg.num = 8;
+}else if(pos[1] >= offset_h + height_roi*0.75){
+servo_msg.msg = "tilt_camera";
+servo_msg.num = -8;
+
+}
+
         if(qr_positions.size() <= 4){
             qr_positions.push(msg.data);
         }else{
@@ -93,6 +113,7 @@ int main(int argc,  char  **argv)
     ros::param::get("qr_scanner/height_roi", height_roi);
     ros::param::get("qr_scanner/width_roi", width_roi);
 ros::param::get("camera_module/width", width);
+ros::param::get("camera_module/height", height);
 
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
@@ -103,14 +124,18 @@ ros::param::get("camera_module/width", width);
     ros::NodeHandle nh;
     pub = image_trans.advertise("master/video_stream", 1);
     pub_robot = nh.advertise<pioneer2::control>("master/robot_control", 1);
-	
+    pub_servo = nh.advertise<pioneer2::control>("master/servo_control", 1);
+	servo_msg.msg = "stop";
+servo_msg.num = 0;
 cont_msg.msg = "stop";
     cont_msg.num = 0;
-ros::Rate loop_rate(2);
+ros::Rate loop_rate(30);
 
 while(ros::ok()){
 
-
+pub_servo.publish(servo_msg);
+servo_msg.msg = "stop";
+servo_msg.num = 0;
 pub_robot.publish(cont_msg);
 cont_msg.msg = "stop";
     cont_msg.num = 0;

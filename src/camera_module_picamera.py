@@ -28,10 +28,10 @@ def Camera():
         with picamera.array.PiRGBArray(camera) as stream:
             camera.resolution = (width, height)
             camera.framerate = pub_rate
-            camera.shutter_speed = 10000
             while not rospy.is_shutdown():
                 camera.capture(stream, 'bgr', use_video_port=True)
                 frame = stream.array
+
                 try:
                     pub_img1.publish(cv_bridge.cv2_to_imgmsg(frame, "bgr8"))
                 except CvBridgeError as e:

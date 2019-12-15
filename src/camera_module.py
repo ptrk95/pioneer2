@@ -2,12 +2,13 @@
 
 import cv2 
 
+
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
-import picamera
-import picamera.array
+#import picamera
+#import picamera.array
 
 URL = "http://192.168.0.5:8080/video"
 
@@ -26,7 +27,7 @@ def Camera():
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height)	
-    cap.set(cv2.CAP_PROP_FPS, 30)
+    cap.set(cv2.CAP_PROP_FPS, pub_rate)
 
     while not rospy.is_shutdown():
         ret, frame = cap.read()
