@@ -2,6 +2,8 @@
 import rospy
 from pioneer2.msg import control
 
+from std_srvs.srv import Trigger, TriggerResponse
+
 import Adafruit_PCA9685
 from threading import Timer
 
@@ -37,18 +39,21 @@ class servo_controller:
         self.freq = 50
         self.pwm.set_pwm_freq(self.freq)
         self.set_standard_pos()
-        self.pos_tilt = 0
-        self.pos_pan = 0
-        rospy.Subscriber('master/servo_control', control, self.callback)
+        #self.pub_pan_angle = rospy.Publisher('servo_controller/pan_angle', control, queue_size=1)
+        rospy.Subscriber('master/servo_control_pan', control, self.callback)
+        rospy.Subscriber('master/servo_control_tilt', control, self.callback)
         self.timer = Timer_(1.0, True)
         self.timer_t = Timer_(1.0, False)
+        self.get_pan_pos = rospy.Service("servo_controller/pan_angle", Trigger, self.trigger_response)
 
+    def trigger_response(self, request):
+        return TriggerResponse(success=True, message= str(self.pos_pan))
     
     def set_standard_pos(self):
-        self.std_tilt = rospy.get_param('std_tilt', default=0)
-        self.std_pan = rospy.get_param('std_pan', default=0)
-        self.pan_camera(self.std_pan)
-        self.tilt_camera(self.std_tilt)
+        self.pos_tilt = rospy.get_param('servo_controller/std_tilt', default=0)
+        self.pos_pan  = rospy.get_param('servo_controller/std_pan', default=0)
+        self.pan_camera(self.pos_pan)
+        self.tilt_camera(self.pos_tilt)
 
 # channel 0 tilt and channel 1 pan
     def angle_to_ms(self, angle, channel):

@@ -6,21 +6,28 @@
 #include "std_msgs/String.h"
 #include "pioneer2/control.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "std_srvs/Trigger.h"
+
+#include <string>
 
 static int height_roi = 400;
 static int width_roi = 640;
 
-volatile int pan_angle = 0;
-
 int width = 640;
 int height = 480;
+int publish_rate = 15;
 
 pioneer2::control cont_msg = pioneer2::control();
-pioneer2::control servo_msg = pioneer2::control();
+pioneer2::control servo_msg_pan = pioneer2::control();
+pioneer2::control servo_msg_tilt = pioneer2::control();
+
+ros::ServiceClient service_pan_pos;
+std_srvs::Trigger srv;
 
 image_transport::Publisher pub;
 ros::Publisher pub_robot;
-ros::Publisher pub_servo;
+ros::Publisher pub_servo_pan;
+ros::Publisher pub_servo_tilt;
 std::queue<std::vector<int>> qr_positions = std::queue<std::vector<int>>();
 
 void drawLine(cv::Mat &img){
@@ -37,7 +44,9 @@ void drawLine(cv::Mat &img){
 }
 
 bool check_pan_angle(int angle){
-    if(pan_angle + angle <= 75 && pan_angle + angle >= -75){
+service_pan_pos.call(srv);
+int pan_angle = std::stoi(srv.response.message);
+    if(pan_angle + angle <= 45 && pan_angle + angle >= -45){
         return true;
     }else{
         return false;
@@ -46,7 +55,7 @@ bool check_pan_angle(int angle){
 
 void robot_turn_left(int angle){
     cont_msg.msg = "turn_left";
-    cont_msg.num = angle;
+    cont_msg.num = -angle;
    // pub_robot.publish(cont_msg);
 }
 
@@ -64,19 +73,21 @@ void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
 int offset = (width - width_roi) /2;
 if(pos[0] <= offset + width_roi*0.25){
 //cont_msg.msg = "turn_left";
-servo_msg.msg = "pan_camera";
-servo_msg.num = 15;
+servo_msg_pan.msg = "pan_camera";
+servo_msg_pan.num = 15;
 if(!check_pan_angle(15)){
-    robot_turn_left(75);
-    servo_msg.num = -75;
+    robot_turn_left(45);
+    servo_msg_pan.num = -45;
 }
 }else if(pos[0]>= offset + width_roi*0.75){
 //cont_msg.msg = "turn_right";
-servo_msg.msg = "pan_camera";
-servo_msg.num = -15;
+servo_msg_pan.msg = "pan_camera";
+servo_msg_pan.num = -15;
 if(!check_pan_angle(-15)){
-    robot_turn_right(75);
-    servo_msg.num = 75;
+std::cout << "before turn" << std::endl;
+    robot_turn_right(45);
+    servo_msg_pan.num = 45;
+std::cout << "after turn" << std::endl;
 }
 }else{
 cont_msg.msg = "drive";
@@ -84,11 +95,11 @@ cont_msg.msg = "drive";
 
 int offset_h = (height - height_roi) /2;
 if(pos[1] <= offset_h + height_roi*0.25){
-servo_msg.msg = "tilt_camera";
-servo_msg.num = 8;
+servo_msg_tilt.msg = "tilt_camera";
+servo_msg_tilt.num = 8;
 }else if(pos[1] >= offset_h + height_roi*0.75){
-servo_msg.msg = "tilt_camera";
-servo_msg.num = -8;
+servo_msg_tilt.msg = "tilt_camera";
+servo_msg_tilt.num = -8;
 
 }
 
@@ -142,6 +153,7 @@ int main(int argc,  char  **argv)
     ros::param::get("qr_scanner/width_roi", width_roi);
 ros::param::get("camera_module/width", width);
 ros::param::get("camera_module/height", height);
+ros::param::get("master/publish_rate", publish_rate);
 
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
@@ -152,18 +164,31 @@ ros::param::get("camera_module/height", height);
     ros::NodeHandle nh;
     pub = image_trans.advertise("master/video_stream", 1);
     pub_robot = nh.advertise<pioneer2::control>("master/robot_control", 1);
-    pub_servo = nh.advertise<pioneer2::control>("master/servo_control", 1);
-	servo_msg.msg = "stop";
-servo_msg.num = 0;
+    pub_servo_pan = nh.advertise<pioneer2::control>("master/servo_control_pan", 1);
+ pub_servo_tilt = nh.advertise<pioneer2::control>("master/servo_control_tilt", 1);
+	servo_msg_pan.msg = "stop";
+servo_msg_pan.num = 0;
+servo_msg_tilt.msg = "stop";
+servo_msg_tilt.num = 0;
 cont_msg.msg = "stop";
     cont_msg.num = 0;
-ros::Rate loop_rate(30);
+//ros::wait_for_service("servo_controller/pan_pos");
+service_pan_pos = nh.serviceClient<std_srvs::Trigger>("servo_controller/pan_angle");
+
+if(!service_pan_pos.exists()){
+service_pan_pos.waitForExistence();
+
+}
+ros::Rate loop_rate(publish_rate);
 
 while(ros::ok()){
 
-pub_servo.publish(servo_msg);
-servo_msg.msg = "stop";
-servo_msg.num = 0;
+pub_servo_pan.publish(servo_msg_pan);
+servo_msg_pan.msg = "stop";
+servo_msg_pan.num = 0;
+pub_servo_tilt.publish(servo_msg_tilt);
+servo_msg_tilt.msg = "stop";
+servo_msg_tilt.num = 0;
 pub_robot.publish(cont_msg);
 cont_msg.msg = "stop";
     cont_msg.num = 0;

@@ -5,21 +5,21 @@
 
 
  ros::Subscriber cont_sub;
-
+ArRobot robot;
 // add Actions for automatic driving
   ArActionLimiterForwards limiter("speed limiter near", 800, 1000, 100); // arguments: name, stopDistance mm, slowDownDistance mm, maxSeed mm/sec
   ArActionLimiterForwards limiterFar("speed limiter far", 400, 1250, 300);
   ArActionConstantVelocity drive("drive", 150); // 400mm/sec
   ArActionStop stop("stop");
-  ArActionTurn turn_left("turn left", 100, 0, 75);
-ArActionTurn turn_right("turn right", 100, 0, -75);
+  ArActionTurn turn_left("turn left", 100, 0, 20);
+ArActionTurn turn_right("turn right", 100, 0, -20);
 
 void controllerCallback(const pioneer2::control::ConstPtr &msg){
   if(msg->msg == "stop"){
     
 drive.deactivate();
-turn_left.deactivate();
-turn_right.deactivate();
+//turn_left.deactivate();
+//turn_right.deactivate();
   }else if(msg->msg == "stop_now"){
     if(!stop.isActive()){
       stop.activate();
@@ -27,18 +27,25 @@ turn_right.deactivate();
 	
   }else if(msg->msg == "drive"){
     if(!drive.isActive()){
-	
+	std::cout<<"drive" <<std::endl;
       drive.activate();
-turn_left.deactivate();
-turn_right.deactivate();
+//turn_left.deactivate();
+//turn_right.deactivate();
     }
   }else if(msg->msg == "turn_left"){
 	//robot.setRotVel(msg->num);
 	if(!turn_left.isActive()){
 	std::cout<<"turn_left" <<std::endl;
-      turn_left.activate();
-turn_right.deactivate();
-drive.deactivate();
+robot.lock();
+  robot.setRotVel(-msg->num/2);
+  robot.unlock();
+  ArUtil::sleep(2000);
+robot.setRotVel(0);
+
+//turn_right.deactivate();
+  //    turn_left.activate();
+
+//drive.deactivate();
     }
 	//robot.stop();
 	//robot.stopRunning();
@@ -46,9 +53,16 @@ drive.deactivate();
 	//robot.setRotVel(msg->num);
 	if(!turn_right.isActive()){
 	std::cout<<"turn_right" <<std::endl;
-      turn_right.activate();
-turn_left.deactivate();
-drive.deactivate();
+robot.lock();
+  robot.setRotVel(-msg->num/2);
+  robot.unlock();
+  ArUtil::sleep(2000);
+robot.setRotVel(0);
+
+//turn_left.deactivate();
+  //    turn_right.activate();
+
+//drive.deactivate();
     }
 	//robot.stop();
 	//robot.stopRunning();
@@ -63,7 +77,7 @@ int main(int argc, char **argv)
   ros::NodeHandle node_handle;
   //ros::param::get("visualizer/height", height);
 
-  ros::Subscriber cont_sub = node_handle.subscribe("master/control", 2, controllerCallback);
+  ros::Subscriber cont_sub = node_handle.subscribe("master/robot_control", 2, controllerCallback);
   
 
   Aria::init();
@@ -72,7 +86,7 @@ int main(int argc, char **argv)
   parser.addDefaultArgument("-rp /dev/ttyUSB0");
   parser.loadDefaultArguments();
 
-ArRobot robot;
+
 
   // ArRobotConnector connects to the robot, get some initial data from it such as type and name,
   // and then loads parameter files for this robot.
@@ -109,8 +123,8 @@ ArRobot robot;
 robot.addAction(&stop, 100);
    robot.addAction(&limiter, 90);
   //robot.addAction(&limiterFar, 80);
-robot.addAction(&turn_right,59);
-robot.addAction(&turn_left, 59);
+robot.addAction(&turn_right,45);
+robot.addAction(&turn_left, 45);
   robot.addAction(&drive, 50);
   
 turn_right.deactivate();
