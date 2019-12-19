@@ -11,8 +11,8 @@
   ArActionLimiterForwards limiterFar("speed limiter far", 400, 1250, 300);
   ArActionConstantVelocity drive("drive", 150); // 400mm/sec
   ArActionStop stop("stop");
-  ArActionTurn turn_left("turn left", 100, 0, 2);
-ArActionTurn turn_right("turn right", 100, 0, -2);
+  ArActionTurn turn_left("turn left", 100, 0, 75);
+ArActionTurn turn_right("turn right", 100, 0, -75);
 
 void controllerCallback(const pioneer2::control::ConstPtr &msg){
   if(msg->msg == "stop"){

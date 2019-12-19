@@ -10,6 +10,8 @@
 static int height_roi = 400;
 static int width_roi = 640;
 
+volatile int pan_angle = 0;
+
 int width = 640;
 int height = 480;
 
@@ -34,7 +36,25 @@ void drawLine(cv::Mat &img){
     }
 }
 
+bool check_pan_angle(int angle){
+    if(pan_angle + angle <= 75 && pan_angle + angle >= -75){
+        return true;
+    }else{
+        return false;
+    }
+}
 
+void robot_turn_left(int angle){
+    cont_msg.msg = "turn_left";
+    cont_msg.num = angle;
+   // pub_robot.publish(cont_msg);
+}
+
+void robot_turn_right(int angle){
+    cont_msg.msg = "turn_right";
+    cont_msg.num = angle;
+   // pub_robot.publish(cont_msg);
+}
 
 void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
     
@@ -46,10 +66,18 @@ if(pos[0] <= offset + width_roi*0.25){
 //cont_msg.msg = "turn_left";
 servo_msg.msg = "pan_camera";
 servo_msg.num = 15;
+if(!check_pan_angle(15)){
+    robot_turn_left(75);
+    servo_msg.num = -75;
+}
 }else if(pos[0]>= offset + width_roi*0.75){
 //cont_msg.msg = "turn_right";
 servo_msg.msg = "pan_camera";
 servo_msg.num = -15;
+if(!check_pan_angle(-15)){
+    robot_turn_right(75);
+    servo_msg.num = 75;
+}
 }else{
 cont_msg.msg = "drive";
 }
