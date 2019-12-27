@@ -8,6 +8,10 @@
 #include "vector"
 #include "algorithm"
 
+#include "wiringPi.h"
+
+#define LED 18
+
 //height of region of interest
 int height_roi = 400;
 int width_roi = 640;
@@ -36,6 +40,8 @@ class qr_scanner{
 
 public:
 
+
+
 qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
     // Configure scanner
     std::string source_name = "camera_module/";
@@ -44,6 +50,7 @@ qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
     image_sub = image_trans.subscribe(source_name, 1, &qr_scanner::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
     pub_qrPos = node_handle.advertise<std_msgs::Int32MultiArray>("qr_scanner/qr_pos", 2);
+    
 }
 
 ~qr_scanner(){
@@ -183,6 +190,17 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 
 };
 
+PI_THREAD (blinky)
+{
+  for (;;)
+  {
+    digitalWrite (LED, HIGH) ;	// On
+    delay (500) ;		// mS
+    digitalWrite (LED, LOW) ;	// Off
+    delay (500) ;
+  }
+}
+
 int main(int argc,  char  **argv)
 {
     ros::init(argc, argv, "qr_scanner");
@@ -195,6 +213,9 @@ int main(int argc,  char  **argv)
     ros::param::get("~stream_name", stream_name);
 	std::cout << stream_name << std::endl;
     ros::NodeHandle node_handle;
+    wiringPiSetup();
+    pinMode(18, 1); // 1 for output
+    piThreadCreate (blinky);
 
     qr_scanner scan_qr = qr_scanner(node_handle);
     
