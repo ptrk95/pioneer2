@@ -173,8 +173,8 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 QrRegistered = decodedObjects[i].data;
             }
         }
-    cv::imshow("roi", gray_roi);
-    cv::waitKey(1);
+    //cv::imshow("roi", gray_roi);
+    //cv::waitKey(1);
 
     image_pub.publish(cv_ptr->toImageMsg());
 
@@ -192,8 +192,8 @@ int main(int argc,  char  **argv)
 	ros::param::get("qr_scanner/scale", scale);
     ros::param::get("qr_scanner/qr_code", QrRegistered);
     ros::param::get("qr_scanner/qr_code_unregister", QrUnregister);
-    ros::param::get("qr_scanner/stream_name", stream_name);
-
+    ros::param::get("~stream_name", stream_name);
+	std::cout << stream_name << std::endl;
     ros::NodeHandle node_handle;
 
     qr_scanner scan_qr = qr_scanner(node_handle);
