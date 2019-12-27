@@ -179,6 +179,7 @@ int main(int argc,  char  **argv)
     ros::param::get("qr_scanner/height_roi", height_roi);
     ros::param::get("qr_scanner/width_roi", width_roi);
 	ros::param::get("qr_scanner/scale", scale);
+    ros::param::get("qr_scanner/qr_code", QrRegistered);
 
     ros::NodeHandle node_handle;
 

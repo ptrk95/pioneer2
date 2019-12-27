@@ -12,6 +12,7 @@
 
 
      <node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
+        <param name="qr_code" type="string" value="test" />
 	<param name="height_roi" type="int" value="250" />
 	<param name="width_roi" type="int" value="300" />
 <param name="scale" type="double" value="1" />
