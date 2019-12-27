@@ -15,7 +15,6 @@ float scale = 2;
 
 std::string QrRegistered = "test";
 std::string QrUnregister = "0";
-std::string stream_name = "video_stream";
 
 typedef struct
 {
@@ -38,10 +37,8 @@ public:
 
 qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
     // Configure scanner
-    std::string source_name = "camera_module/";
-    source_name.append(stream_name);
     scanner.set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
-    image_sub = image_trans.subscribe(source_name, 1, &qr_scanner::qr_scannerCallback,this);
+    image_sub = image_trans.subscribe("camera_module/video_stream", 1, &qr_scanner::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
     pub_qrPos = node_handle.advertise<std_msgs::Int32MultiArray>("qr_scanner/qr_pos", 2);
 }
@@ -192,7 +189,6 @@ int main(int argc,  char  **argv)
 	ros::param::get("qr_scanner/scale", scale);
     ros::param::get("qr_scanner/qr_code", QrRegistered);
     ros::param::get("qr_scanner/qr_code_unregister", QrUnregister);
-    ros::param::get("qr_scanner/stream_name", stream_name);
 
     ros::NodeHandle node_handle;
 

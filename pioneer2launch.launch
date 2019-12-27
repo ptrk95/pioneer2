@@ -14,6 +14,16 @@
      <node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
         <param name="qr_code" type="string" value="test" />
         <param name="qr_code_unregister" type="string" value="0" />
+        <param name="stream_name" type="string" value="video_stream" />
+	<param name="height_roi" type="int" value="300" />
+	<param name="width_roi" type="int" value="400" />
+<param name="scale" type="double" value="1" />
+     </node>
+
+<node pkg="pioneer2" name="qr_scanner2" type="qr_scanner" output="screen">
+        <param name="qr_code" type="string" value="test" />
+        <param name="qr_code_unregister" type="string" value="0" />
+        <param name="stream_name" type="string" value="video_stream_2" />
 	<param name="height_roi" type="int" value="300" />
 	<param name="width_roi" type="int" value="400" />
 <param name="scale" type="double" value="1" />
