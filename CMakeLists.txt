@@ -134,7 +134,7 @@ ${ARIA_HEADER_INCLUDE}
 
 
 set(WIRINGPI_HEADER_FILE /usr/local/include/wiringPi.h)
-set(WIRINGPI_LIB /usr/local/lib/libwiringPi.so.2.46)
+set(WIRINGPI_LIB /usr/lib/libwiringPi.so.2.46)
 set(PCA9685_LIB /usr/local/lib/libwiringPiPca9685.so.2.0)
 
 
@@ -193,6 +193,7 @@ ${OpenCV_LIBRARIES}
 
 
 target_link_libraries(qr_scanner
+${WIRINGPI_LIB}
 ${zbar_LIBRARIES}
    ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
