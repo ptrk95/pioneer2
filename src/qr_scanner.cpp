@@ -13,7 +13,8 @@ int height_roi = 400;
 int width_roi = 640;
 float scale = 2;
 
-static std::string QrRegistered = "test";
+std::string QrRegistered = "test";
+std::string QrUnregister = "0";
 
 typedef struct
 {
@@ -160,6 +161,13 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 std_msgs::Int32MultiArray pos = std_msgs::Int32MultiArray();
                 pos.data = { int(middle_pos.x/scale +scalePoint.x), int(middle_pos.y/scale +scalePoint.y)};
                 pub_qrPos.publish(pos);
+            }else if(decodedObjects[i].data == QrUnregister){
+                QrRegistered = "-1";
+                std::cout << "\nQrCode unregistered." << std::endl;
+                std::cout << "Scan Qr-code to register and follow it." << std::endl;
+            }
+            if(QrRegistered == "-1" && decodedObjects[i].data != "0"){
+                QrRegistered = decodedObjects[i].data;
             }
         }
     cv::imshow("roi", gray_roi);
@@ -180,6 +188,7 @@ int main(int argc,  char  **argv)
     ros::param::get("qr_scanner/width_roi", width_roi);
 	ros::param::get("qr_scanner/scale", scale);
     ros::param::get("qr_scanner/qr_code", QrRegistered);
+    ros::param::get("qr_scanner/qr_code_unregister", QrUnregister);
 
     ros::NodeHandle node_handle;
 

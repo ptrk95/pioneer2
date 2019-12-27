@@ -6,7 +6,7 @@
 #include "std_msgs/String.h"
 #include "pioneer2/control.h"
 
-
+bool visualize = true;
 int height = 360;
 
 void imageCallback(const sensor_msgs::ImageConstPtr &msg)
@@ -36,7 +36,12 @@ int main(int argc,  char  **argv)
 
     ros::NodeHandle node_handle;
     ros::param::get("visualizer/height", height);
+    ros::param::get("visualizer/visualize", visualize);
 
+    if(!visualize){
+        std::cout << "\nNot visualizing." << std::endl;
+        return 0;
+    }
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
     image_sub = image_trans.subscribe("qr_scanner/video_stream", 1, imageCallback);
