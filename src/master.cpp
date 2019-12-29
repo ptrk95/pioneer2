@@ -6,9 +6,15 @@
 #include "std_msgs/String.h"
 #include "pioneer2/control.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "std_msgs/Bool.h"
 #include "std_srvs/Trigger.h"
 
 #include <string>
+
+#include "wiringPi.h"
+
+
+#define LED 18
 
 static int height_roi = 400;
 static int width_roi = 640;
@@ -29,6 +35,45 @@ ros::Publisher pub_robot;
 ros::Publisher pub_servo_pan;
 ros::Publisher pub_servo_tilt;
 std::queue<std::vector<int>> qr_positions = std::queue<std::vector<int>>();
+
+bool unregistered = false;
+bool stop_blinking = false;
+bool stop_blink = false;
+bool started_blink = false;
+int reset_counter = 0;
+
+PI_THREAD (blinky)
+{
+  while(!stop_blinking){
+    digitalWrite (LED, HIGH) ;	// On
+    delay (500) ;		// mS
+    digitalWrite (LED, LOW) ;	// Off
+    delay (500) ;
+  }
+	return 0;
+}
+
+PI_THREAD (blink)
+{
+started_blink = true;
+while(!stop_blink){
+    digitalWrite (LED, HIGH) ;	// On
+    delay (100) ;		// mS
+}
+digitalWrite (LED, LOW) ;	// Off
+started_blink = false;
+	return 0;
+}
+
+void start_blink(){
+	piThreadCreate (blink);
+}
+
+void start_blinking(){
+	piThreadCreate (blinky);
+}
+
+
 
 void drawLine(cv::Mat &img){
     if(!qr_positions.empty()){
@@ -63,6 +108,25 @@ void robot_turn_right(int angle){
     cont_msg.msg = "turn_right";
     cont_msg.num = angle;
    // pub_robot.publish(cont_msg);
+}
+
+void qr_reset_Callback(const std_msgs::Bool &msg){
+unregistered = msg.data;
+if(msg.data == true){
+if(reset_counter ==0){
+std::cout << "\nQrCode unregistered." << std::endl;
+std::cout << "Scan Qr-code to register and follow it." << std::endl;
+stop_blinking = false;
+start_blinking();
+}
+reset_counter++;
+}else{
+reset_counter--;
+if(reset_counter == 0){
+stop_blinking = true;
+std::cout << "\nQrCode registered. (Data from QrCode may print several times)" << std::endl;
+}
+}
 }
 
 void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
@@ -112,6 +176,11 @@ servo_msg_tilt.num = -8;
     }else{
         qr_positions.push(msg.data);
     }
+if(!started_blink)
+{
+start_blink();
+}
+stop_blink = false;
 }
 
 
@@ -148,6 +217,9 @@ int main(int argc,  char  **argv)
     ros::init(argc, argv, "master");
 
     ros::NodeHandle node_handle;
+
+    wiringPiSetupGpio();
+    pinMode(LED, OUTPUT); // 1 for output
     
     ros::param::get("qr_scanner/height_roi", height_roi);
     ros::param::get("qr_scanner/width_roi", width_roi);
@@ -158,7 +230,8 @@ ros::param::get("master/publish_rate", publish_rate);
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
     image_sub = image_trans.subscribe("qr_scanner/video_stream", 1, imageCallback);
-
+	ros::Subscriber qr_reset_sub;
+    qr_reset_sub = node_handle.subscribe("qr_scanner/qr_reset", 4, qr_reset_Callback);
     ros::Subscriber qr_pos_sub;
     qr_pos_sub = node_handle.subscribe("qr_scanner/qr_pos", 1, qr_pos_Callback);
     ros::NodeHandle nh;
@@ -192,12 +265,13 @@ servo_msg_tilt.num = 0;
 pub_robot.publish(cont_msg);
 cont_msg.msg = "stop";
     cont_msg.num = 0;
+stop_blink = true;
 ros::spinOnce();
 loop_rate.sleep();
 
 }
    
-   
+   digitalWrite (LED, LOW) ;
     clear(qr_positions);
 
     return 0;

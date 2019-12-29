@@ -4,20 +4,18 @@
 #include "image_transport/image_transport.h"
 #include "cv_bridge/cv_bridge.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "std_msgs/Bool.h"
 #include "zbar.h"
 #include "vector"
 #include "algorithm"
 
-#include "wiringPi.h"
-
-#define LED 18
 
 //height of region of interest
 int height_roi = 400;
 int width_roi = 640;
 float scale = 2;
 
-bool stop = false;
+bool unregistered = false;
 
 std::string QrRegistered = "test";
 std::string QrUnregister = "0";
@@ -31,32 +29,6 @@ typedef struct
 }decodedObject;
 
 
-PI_THREAD (blinky)
-{
-  while(!stop){
-    digitalWrite (LED, HIGH) ;	// On
-    delay (500) ;		// mS
-    digitalWrite (LED, LOW) ;	// Off
-    delay (500) ;
-  }
-	return 0;
-}
-
-PI_THREAD (blink)
-{
-    digitalWrite (LED, HIGH) ;	// On
-    delay (100) ;		// mS
-    digitalWrite (LED, LOW) ;	// Off
-	return 0;
-}
-
-void start_blink(){
-	piThreadCreate (blink);
-}
-
-void start_blinking(){
-	piThreadCreate (blinky);
-}
 
 class qr_scanner{
     ros::NodeHandle node_handle;
@@ -64,6 +36,7 @@ class qr_scanner{
     image_transport::Subscriber image_sub;
     image_transport::Publisher image_pub;
     ros::Publisher pub_qrPos;
+	ros::Publisher pub_reset;
     // Create zbar scanner
     zbar::ImageScanner scanner;
 
@@ -80,6 +53,7 @@ qr_scanner(ros::NodeHandle node_handle):image_trans(node_handle){
     image_sub = image_trans.subscribe(source_name, 1, &qr_scanner::qr_scannerCallback,this);
     image_pub = image_trans.advertise("qr_scanner/video_stream", 1);
     pub_qrPos = node_handle.advertise<std_msgs::Int32MultiArray>("qr_scanner/qr_pos", 2);
+    pub_reset = node_handle.advertise<std_msgs::Bool>("qr_scanner/qr_reset", 1);
 }
 
 ~qr_scanner(){
@@ -177,10 +151,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
         for(int i = 0; i < size; i++)
         { 
 			
-            if(decodedObjects[i].data == QrRegistered){
-
-				stop = true;
-				::start_blink();
+            if(decodedObjects[i].data == QrRegistered && !unregistered){
 
                 std::vector<cv::Point> points = decodedObjects[i].location;
                 std::vector<cv::Point> hull;
@@ -204,17 +175,19 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
                 std_msgs::Int32MultiArray pos = std_msgs::Int32MultiArray();
                 pos.data = { int(middle_pos.x/scale +scalePoint.x), int(middle_pos.y/scale +scalePoint.y)};
                 pub_qrPos.publish(pos);
-            }else if(decodedObjects[i].data == QrUnregister){
-                QrRegistered = "-1";
-                std::cout << "\nQrCode unregistered." << std::endl;
-                std::cout << "Scan Qr-code to register and follow it." << std::endl;
-				stop = false;
-				::start_blinking();
-            }
-            if(QrRegistered == "-1" && decodedObjects[i].data != "0"){
+            }else if(decodedObjects[i].data == QrUnregister && !unregistered){
+                QrRegistered = "";
+				std_msgs::Bool reset = std_msgs::Bool();
+				reset.data = true;
+				unregistered = true;
+				pub_reset.publish(reset);
+            }else if(unregistered && decodedObjects[i].data != QrUnregister){
                 QrRegistered = decodedObjects[i].data;
-				stop = true;
-				
+				unregistered = false;
+				std::cout << QrRegistered << std::endl;
+                std_msgs::Bool reset = std_msgs::Bool();
+				reset.data = false;
+				pub_reset.publish(reset);
             }
         }
     //cv::imshow("roi", gray_roi);
@@ -240,11 +213,9 @@ int main(int argc,  char  **argv)
 	ros::param::get("qr_scanner/scale", scale);
     ros::param::get("qr_scanner/qr_code", QrRegistered);
     ros::param::get("qr_scanner/qr_code_unregister", QrUnregister);
-    ros::param::get("~stream_name", stream_name);
+    ros::param::get("~stream_name", stream_name); // for multithreading
 	std::cout << stream_name << std::endl;
     ros::NodeHandle node_handle;
-    wiringPiSetupGpio();
-    pinMode(LED, OUTPUT); // 1 for output
     
 
     qr_scanner scan_qr = qr_scanner(node_handle);

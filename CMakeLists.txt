@@ -193,7 +193,6 @@ ${OpenCV_LIBRARIES}
 
 
 target_link_libraries(qr_scanner
-${WIRINGPI_LIB}
 ${zbar_LIBRARIES}
    ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
@@ -212,6 +211,7 @@ ${OpenCV_LIBRARIES}
 ${ARIA_LIB}
  )
 target_link_libraries(master
+${WIRINGPI_LIB}
    ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
 ${ARIA_LIB}
