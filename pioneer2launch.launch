@@ -35,6 +35,7 @@
 
 <node pkg="pioneer2" name="master" type="master" output="screen">
 <param name="publish_rate" type="int" value="5" />
+<param name="turn_timer_ms" type="int" value="2000" />
      </node>
 
      <node pkg="pioneer2" name="visualizer" type="visualizer" output="screen">

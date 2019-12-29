@@ -34,13 +34,18 @@ image_transport::Publisher pub;
 ros::Publisher pub_robot;
 ros::Publisher pub_servo_pan;
 ros::Publisher pub_servo_tilt;
-std::queue<std::vector<int>> qr_positions = std::queue<std::vector<int>>();
 
 bool unregistered = false;
 bool stop_blinking = false;
 bool stop_blink = false;
 bool started_blink = false;
 int reset_counter = 0;
+
+bool turning_robot_right = false;
+bool turning_robot_left = false;
+
+
+int turn_timer_ms = 2500;
 
 PI_THREAD (blinky)
 {
@@ -65,37 +70,11 @@ started_blink = false;
 	return 0;
 }
 
-void start_blink(){
-	piThreadCreate (blink);
-}
+int get_pan_angle_servo(){
 
-void start_blinking(){
-	piThreadCreate (blinky);
-}
-
-
-
-void drawLine(cv::Mat &img){
-    if(!qr_positions.empty()){
-        if(qr_positions.size() >= 2){
-			//cv::Rect roi_rect = cv::Rect((img.cols - width_roi)/2, (img.rows - height_roi)/2, width_roi, height_roi);
-			//cv::Mat roi = img(roi_rect);
-            std::vector<int> pos2 = qr_positions.front();
-            std::vector<int> pos1 = qr_positions.back();
-            cv::line(img, cv::Point(pos1[0], pos1[1]) , cv::Point(pos2[0], pos2[1]), cv::Scalar(255,0,0), 3);
-            qr_positions.pop();
-        }
-    }
-}
-
-bool check_pan_angle(int angle){
 service_pan_pos.call(srv);
-int pan_angle = std::stoi(srv.response.message);
-    if(pan_angle + angle <= 45 && pan_angle + angle >= -45){
-        return true;
-    }else{
-        return false;
-    }
+return std::stoi(srv.response.message);
+
 }
 
 void robot_turn_left(int angle){
@@ -109,6 +88,58 @@ void robot_turn_right(int angle){
     cont_msg.num = angle;
    // pub_robot.publish(cont_msg);
 }
+
+PI_THREAD (turn_left_timer)
+{
+	turning_robot_left = true;
+  	delay(turn_timer_ms);
+	int pan_angle = get_pan_angle_servo();
+	if(pan_angle != 0){
+		robot_turn_left(abs(pan_angle)+15);
+        servo_msg_pan.msg = "force_0_pan_camera";
+		servo_msg_pan.num = 0;
+        pub_servo_pan.publish(servo_msg_pan);
+	}
+	
+	turning_robot_left = false;
+	return 0;
+}
+
+PI_THREAD (turn_right_timer)
+{
+	turning_robot_right = true;
+  	delay(turn_timer_ms);
+	int pan_angle = get_pan_angle_servo();
+	if(pan_angle != 0){
+		robot_turn_right(abs(pan_angle)+15);
+		servo_msg_pan.msg = "force_0_pan_camera";
+		servo_msg_pan.num = 0;
+        pub_servo_pan.publish(servo_msg_pan);
+	}
+	turning_robot_right = false;
+	return 0;
+}
+
+void start_turn_left_timer(){
+	piThreadCreate (turn_left_timer);
+}
+
+void start_turn_right_timer(){
+	piThreadCreate (turn_right_timer);
+}
+
+void start_blink(){
+	piThreadCreate (blink);
+}
+
+void start_blinking(){
+	piThreadCreate (blinky);
+}
+
+
+
+
+
 
 void qr_reset_Callback(const std_msgs::Bool &msg){
 unregistered = msg.data;
@@ -129,31 +160,52 @@ std::cout << "\nQrCode registered. (Data from QrCode may print several times)" <
 }
 }
 
+
+
+
+bool check_pan_angle(int angle){ //maximum angle reached
+int pan_angle = get_pan_angle_servo();
+    if(pan_angle + angle <= 45 && pan_angle + angle >= -45){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+
+
+
+
+
 void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
-    
-    if(!qr_positions.empty()){
         
 	std::vector<int> pos = msg.data;
 int offset = (width - width_roi) /2;
-if(pos[0] <= offset + width_roi*0.25){
+if(pos[0] <= offset + width_roi*0.25){ // turn left
 //cont_msg.msg = "turn_left";
 servo_msg_pan.msg = "pan_camera";
 servo_msg_pan.num = 15;
 if(!check_pan_angle(15)){
     robot_turn_left(45);
     servo_msg_pan.num = -45;
+}else{
+	if(!turning_robot_left){
+	start_turn_left_timer();
 }
-}else if(pos[0]>= offset + width_roi*0.75){
+}
+}else if(pos[0]>= offset + width_roi*0.75){ // turn right
 //cont_msg.msg = "turn_right";
 servo_msg_pan.msg = "pan_camera";
 servo_msg_pan.num = -15;
 if(!check_pan_angle(-15)){
-std::cout << "before turn" << std::endl;
     robot_turn_right(45);
     servo_msg_pan.num = 45;
-std::cout << "after turn" << std::endl;
-}
 }else{
+	if(!turning_robot_right){
+	start_turn_right_timer();
+	}
+}
+}else if(get_pan_angle_servo() == 0){
 cont_msg.msg = "drive";
 }
 
@@ -167,19 +219,18 @@ servo_msg_tilt.num = -8;
 
 }
 
-        if(qr_positions.size() <= 4){
-            qr_positions.push(msg.data);
-        }else{
-            qr_positions.pop();
-            qr_positions.push(msg.data);
-        }
-    }else{
-        qr_positions.push(msg.data);
-    }
-if(!started_blink)
-{
-start_blink();
-}
+pub_servo_pan.publish(servo_msg_pan);
+servo_msg_pan.msg = "stop";
+servo_msg_pan.num = 0;
+pub_servo_tilt.publish(servo_msg_tilt);
+servo_msg_tilt.msg = "stop";
+servo_msg_tilt.num = 0;
+
+       
+	if(!started_blink)
+	{
+	start_blink();
+	}
 stop_blink = false;
 }
 
@@ -198,7 +249,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr &msg)
         return;
     }
 
-    drawLine(cv_ptr->image);
     pub.publish(cv_ptr->toImageMsg());
 
     
@@ -226,6 +276,7 @@ int main(int argc,  char  **argv)
 ros::param::get("camera_module/width", width);
 ros::param::get("camera_module/height", height);
 ros::param::get("master/publish_rate", publish_rate);
+ros::param::get("master/turn_timer_ms", turn_timer_ms);
 
     image_transport::ImageTransport image_trans(node_handle);
     image_transport::Subscriber image_sub;
@@ -256,12 +307,6 @@ ros::Rate loop_rate(publish_rate);
 
 while(ros::ok()){
 
-pub_servo_pan.publish(servo_msg_pan);
-servo_msg_pan.msg = "stop";
-servo_msg_pan.num = 0;
-pub_servo_tilt.publish(servo_msg_tilt);
-servo_msg_tilt.msg = "stop";
-servo_msg_tilt.num = 0;
 pub_robot.publish(cont_msg);
 cont_msg.msg = "stop";
     cont_msg.num = 0;
@@ -272,7 +317,6 @@ loop_rate.sleep();
 }
    
    digitalWrite (LED, LOW) ;
-    clear(qr_positions);
 
     return 0;
 }

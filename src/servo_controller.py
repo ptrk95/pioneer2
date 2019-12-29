@@ -124,6 +124,11 @@ class servo_controller:
             self.pan_camera_rel(data.num)
             wait = True
             self.timer.start()
+        if(data.msg == "force_0_pan_camera"):
+            self.pan_camera(0)
+            self.pos_pan = 0
+            wait = True
+            self.timer.start()
         
 
     def __del__(self):
