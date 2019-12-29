@@ -43,7 +43,7 @@ class servo_controller:
         rospy.Subscriber('master/servo_control_pan', control, self.callback)
         rospy.Subscriber('master/servo_control_tilt', control, self.callback)
         self.timer = Timer_(1.0, True)
-        self.timer_t = Timer_(1.0, False)
+        self.timer_t = Timer_(0.5, False)
         self.get_pan_pos = rospy.Service("servo_controller/pan_angle", Trigger, self.trigger_response)
 
     def trigger_response(self, request):

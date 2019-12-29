@@ -32,6 +32,7 @@ def Camera():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height)	
     cap.set(cv2.CAP_PROP_FPS, pub_rate)
+    cap.set(cv2.CAP_PROP_CONVERT_RGB , False);
 
     while not rospy.is_shutdown():
         ret, frame = cap.read()

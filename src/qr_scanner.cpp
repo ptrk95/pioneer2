@@ -17,6 +17,8 @@ float scale = 2;
 
 bool unregistered = false;
 
+bool show_roi = false;
+
 std::string QrRegistered = "test";
 std::string QrUnregister = "0";
 std::string stream_name = "video_stream";
@@ -117,7 +119,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
     cv::Mat image;
 	if(scale!=1){
 
-    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_AREA);
+    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_LINEAR);
 }
 
     cv::rectangle(cv_ptr->image, roi_rect, cv::Scalar(0,0,255), 2);
@@ -127,7 +129,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 	//cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
 	cv::cvtColor(roi, gray_roi, CV_BGR2GRAY );
 
-	//cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 3);
+	cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 21, 0);
 	//cv::threshold(gray_roi, gray_roi, 127, 255, cv::THRESH_BINARY);
 	//cv::erode(gray_roi, gray_roi, kernel);
 
@@ -190,8 +192,11 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 				pub_reset.publish(reset);
             }
         }
-    //cv::imshow("roi", gray_roi);
-    //cv::waitKey(1);
+if(show_roi){
+cv::imshow("roi", gray_roi);
+    cv::waitKey(1);
+}
+    
 
     image_pub.publish(cv_ptr->toImageMsg());
 
@@ -213,6 +218,7 @@ int main(int argc,  char  **argv)
 	ros::param::get("qr_scanner/scale", scale);
     ros::param::get("qr_scanner/qr_code", QrRegistered);
     ros::param::get("qr_scanner/qr_code_unregister", QrUnregister);
+    ros::param::get("~show_roi", show_roi);
     ros::param::get("~stream_name", stream_name); // for multithreading
 	std::cout << stream_name << std::endl;
     ros::NodeHandle node_handle;

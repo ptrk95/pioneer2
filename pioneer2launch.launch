@@ -1,11 +1,11 @@
 <launch>
  
-     <node pkg="pioneer2" name="camera_module" type="camera_module.py" output="screen">
-	<param name="publish_rate" type="int" value="30" />
+     <node pkg="pioneer2" name="camera_module" type="camera_module_test.py" output="screen">
+	<param name="publish_rate" type="int" value="60" />
 	<param name="multi_thread" type="bool" value="true" />
 	<param name="piCamera" type="bool" value="true" />
-	<param name="height" type="int" value="480" />
-	<param name="width" type="int" value="640" />
+	<param name="height" type="int" value="256" />
+	<param name="width" type="int" value="400" />
 	<param name="video_src" type="string" value="http://192.168.0.2:8080/video" />
 <param name="angletestPan" type="int" value="0" />
 <param name="angletestTilt" type="int" value="0" />
@@ -13,17 +13,20 @@
 
 
      <node pkg="pioneer2" name="qr_scanner" type="qr_scanner" output="screen">
-        <param name="qr_code" type="string" value="test" />
-        <param name="qr_code_unregister" type="string" value="0" />
+        <param name="qr_code" type="string" value="1" />
+        <param name="qr_code_unregister" type="string" value="-1" />
         <param name="stream_name" type="string" value="video_stream" />
-	<param name="height_roi" type="int" value="300" />
-	<param name="width_roi" type="int" value="500" />
-<param name="scale" type="double" value="1" />
+	<param name="height_roi" type="int" value="250" />
+	<param name="width_roi" type="int" value="400" />
+<param name="scale" type="double" value="1.5" />
+<param name="show_roi" type="bool" value="false" />
      </node>
 
-<node pkg="pioneer2" name="qr_scanner2" type="qr_scanner" output="screen">
+  <node pkg="pioneer2" name="qr_scanner2" type="qr_scanner" output="screen">
         <param name="stream_name" type="string" value="video_stream_2" />
+<param name="show_roi" type="bool" value="false" />
      </node>
+
 
  <node pkg="pioneer2" name="robot_controller" type="robot_controller" output="screen">
      </node>

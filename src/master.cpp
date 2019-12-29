@@ -210,12 +210,12 @@ cont_msg.msg = "drive";
 }
 
 int offset_h = (height - height_roi) /2;
-if(pos[1] <= offset_h + height_roi*0.25){
+if(pos[1] <= offset_h + height_roi*0.33){
 servo_msg_tilt.msg = "tilt_camera";
-servo_msg_tilt.num = 8;
-}else if(pos[1] >= offset_h + height_roi*0.75){
+servo_msg_tilt.num = 4;
+}else if(pos[1] >= offset_h + height_roi*0.66){
 servo_msg_tilt.msg = "tilt_camera";
-servo_msg_tilt.num = -8;
+servo_msg_tilt.num = -4;
 
 }
 
