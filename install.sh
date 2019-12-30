@@ -31,6 +31,8 @@ sudo chmod +x ~/catkin_ws/src/pioneer2/run.sh
 
 . ~/catkin_ws/src/pioneer2/build.sh
 
+sudo dpkg -i wiringpi-2.46-1.deb
+
 
 
 
