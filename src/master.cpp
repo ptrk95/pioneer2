@@ -181,7 +181,7 @@ void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
         
 	std::vector<int> pos = msg.data;
 int offset = (width - width_roi) /2;
-if(pos[0] <= offset + width_roi*0.25){ // turn left
+if(pos[0] <= offset + width_roi*0.08){ // turn left
 //cont_msg.msg = "turn_left";
 servo_msg_pan.msg = "pan_camera";
 servo_msg_pan.num = 15;
@@ -193,7 +193,7 @@ if(!check_pan_angle(15)){
 	start_turn_left_timer();
 }
 }
-}else if(pos[0]>= offset + width_roi*0.75){ // turn right
+}else if(pos[1] >= offset + width_roi*0.92){ // turn right
 //cont_msg.msg = "turn_right";
 servo_msg_pan.msg = "pan_camera";
 servo_msg_pan.num = -15;
@@ -210,12 +210,12 @@ cont_msg.msg = "drive";
 }
 
 int offset_h = (height - height_roi) /2;
-if(pos[1] <= offset_h + height_roi*0.33){
+if(pos[2]  <= offset_h + height_roi*0.10){
 servo_msg_tilt.msg = "tilt_camera";
-servo_msg_tilt.num = 4;
-}else if(pos[1] >= offset_h + height_roi*0.66){
+servo_msg_tilt.num = 2;
+}else if(pos[3] >= offset_h + height_roi*0.90){
 servo_msg_tilt.msg = "tilt_camera";
-servo_msg_tilt.num = -4;
+servo_msg_tilt.num = -2;
 
 }
 

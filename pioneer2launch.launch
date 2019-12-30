@@ -43,7 +43,7 @@
 
      <node pkg="pioneer2" name="visualizer" type="visualizer" output="screen">
 	<param name="height" type="int" value="250" />
-	<param name="visualize" type="bool" value="false" />
+	<param name="visualize" type="bool" value="true" />
      </node>
 
 

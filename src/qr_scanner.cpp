@@ -114,13 +114,7 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
     //float scale = float(height)/float(cv_ptr->image.rows);
     cv::Rect roi_rect = cv::Rect((cv_ptr->image.cols - width_roi)/2, (cv_ptr->image.rows - height_roi)/2, width_roi, height_roi);
     cv::Mat roi = cv_ptr->image(roi_rect);
-
 	
-    cv::Mat image;
-	if(scale!=1){
-
-    cv::resize(roi, roi, cv::Size(0,0),scale, scale, CV_INTER_LINEAR);
-}
 
     cv::rectangle(cv_ptr->image, roi_rect, cv::Scalar(0,0,255), 2);
 	
@@ -129,7 +123,12 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
 	//cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
 	cv::cvtColor(roi, gray_roi, CV_BGR2GRAY );
 
-	cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 21, 0);
+	cv::adaptiveThreshold(gray_roi, gray_roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 111, 0);
+
+    if(scale!=1){
+
+    cv::resize(gray_roi, gray_roi, cv::Size(0,0),scale, scale, CV_INTER_LINEAR);
+    }
 	//cv::threshold(gray_roi, gray_roi, 127, 255, cv::THRESH_BINARY);
 	//cv::erode(gray_roi, gray_roi, kernel);
 
@@ -156,26 +155,27 @@ void qr_scannerCallback(const sensor_msgs::ImageConstPtr &msg)
             if(decodedObjects[i].data == QrRegistered && !unregistered){
 
                 std::vector<cv::Point> points = decodedObjects[i].location;
-                std::vector<cv::Point> hull;
+                int n = points.size();
+                std::vector<cv::Point> hull(n);
+                std::vector<int> hull_x(n);
+                std::vector<int> hull_y(n);
                 
-                // If the points do not form a quad, find convex hull
-                if(points.size() > 4)
-                    cv::convexHull(points, hull);
-                else
-                    hull = points;
                 
                 // Number of points in the convex hull
-                int n = hull.size();
+                
                 
                 for(int j = 0; j < n; j++)
                 {
-		
-                    cv::line(cv_ptr->image, hull[j]/scale +scalePoint, hull[ (j+1) % n]/scale + scalePoint, cv::Scalar(255,0,0), 3);
+		            hull[j] = points[j]/scale + scalePoint;
+                    hull_x[j] = hull[j].x;
+                    hull_y[j] = hull[j].y;
+                    cv::line(cv_ptr->image, points[j]/scale + scalePoint, points[ (j+1) % n]/scale + scalePoint, cv::Scalar(255,0,0), 3);
                 }
+                
 		
-		cv::Point middle_pos( points[1].x+ ((points[2].x-points[1].x)/2), points[0].y +((points[1].y-points[0].y)/2));
+		//cv::Point middle_pos( hull[1].x+ ((hull[2].x-hull[1].x)/2), hull[0].y +((hull[1].y-hull[0].y)/2));
                 std_msgs::Int32MultiArray pos = std_msgs::Int32MultiArray();
-                pos.data = { int(middle_pos.x/scale +scalePoint.x), int(middle_pos.y/scale +scalePoint.y)};
+                pos.data = { int(*std::min_element(hull_x.begin(), hull_x.end())), int(*std::max_element(hull_x.begin(), hull_x.end())), int(*std::min_element(hull_y.begin(), hull_y.end())), int(*std::max_element(hull_y.begin(), hull_y.end()))};
                 pub_qrPos.publish(pos);
             }else if(decodedObjects[i].data == QrUnregister && !unregistered){
                 QrRegistered = "";
