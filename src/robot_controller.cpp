@@ -35,11 +35,11 @@ drive.deactivate();
   }else if(msg->msg == "turn_left"){
 	//robot.setRotVel(msg->num);
 	if(!turn_left.isActive()){
-	std::cout<<"turn_left" <<std::endl;
+	std::cout<<"turn_left: " << msg->num <<std::endl;
 robot.lock();
-  robot.setRotVel(-msg->num/2);
+  robot.setRotVel(msg->num);
   robot.unlock();
-  ArUtil::sleep(2000);
+  ArUtil::sleep(1000);
 robot.setRotVel(0);
 
 //turn_right.deactivate();
@@ -52,11 +52,11 @@ robot.setRotVel(0);
   }else if(msg->msg == "turn_right"){
 	//robot.setRotVel(msg->num);
 	if(!turn_right.isActive()){
-	std::cout<<"turn_right" <<std::endl;
+	std::cout<<"turn_right: " << -msg->num<<std::endl;
 robot.lock();
-  robot.setRotVel(-msg->num/2);
+  robot.setRotVel(-msg->num);
   robot.unlock();
-  ArUtil::sleep(2000);
+  ArUtil::sleep(1000);
 robot.setRotVel(0);
 
 //turn_left.deactivate();

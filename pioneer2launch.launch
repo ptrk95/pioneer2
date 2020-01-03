@@ -19,7 +19,7 @@
 	<param name="height_roi" type="int" value="250" />
 	<param name="width_roi" type="int" value="400" />
 <param name="scale" type="double" value="1.5" />
-<param name="show_roi" type="bool" value="true" />
+<param name="show_roi" type="bool" value="false" />
      </node>
 
   <node pkg="pioneer2" name="qr_scanner2" type="qr_scanner" output="screen">
@@ -32,12 +32,12 @@
      </node>
 
 <node pkg="pioneer2" name="servo_controller" type="servo_controller.py" output="screen">
-	<param name="std_tilt" type="int" value="0" />
+	<param name="std_tilt" type="int" value="15" />
 	<param name="std_pan" type="int" value="0" />
      </node>
 
 <node pkg="pioneer2" name="master" type="master" output="screen">
-<param name="publish_rate" type="int" value="5" />
+<param name="publish_rate" type="int" value="2" />
 <param name="turn_timer_ms" type="int" value="2000" />
      </node>
 

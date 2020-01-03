@@ -44,6 +44,8 @@ int reset_counter = 0;
 bool turning_robot_right = false;
 bool turning_robot_left = false;
 
+bool stop_qr_pos = false;
+
 
 int turn_timer_ms = 2500;
 
@@ -79,7 +81,7 @@ return std::stoi(srv.response.message);
 
 void robot_turn_left(int angle){
     cont_msg.msg = "turn_left";
-    cont_msg.num = -angle;
+    cont_msg.num = angle;
    // pub_robot.publish(cont_msg);
 }
 
@@ -89,16 +91,29 @@ void robot_turn_right(int angle){
    // pub_robot.publish(cont_msg);
 }
 
+
+PI_THREAD (pan_camera_timer)
+{
+    stop_qr_pos = true;
+    delay(1500);
+	int pan_angle = get_pan_angle_servo();
+	if(pan_angle != 0){
+		servo_msg_pan.msg = "force_0_pan_camera";
+		servo_msg_pan.num = 0;
+        pub_servo_pan.publish(servo_msg_pan);
+	}
+    stop_qr_pos = false;
+	return 0;
+}
+
 PI_THREAD (turn_left_timer)
 {
 	turning_robot_left = true;
   	delay(turn_timer_ms);
 	int pan_angle = get_pan_angle_servo();
 	if(pan_angle != 0){
-		robot_turn_left(abs(pan_angle)+15);
-        servo_msg_pan.msg = "force_0_pan_camera";
-		servo_msg_pan.num = 0;
-        pub_servo_pan.publish(servo_msg_pan);
+		robot_turn_left(abs(pan_angle));
+        piThreadCreate (pan_camera_timer);
 	}
 	
 	turning_robot_left = false;
@@ -111,10 +126,8 @@ PI_THREAD (turn_right_timer)
   	delay(turn_timer_ms);
 	int pan_angle = get_pan_angle_servo();
 	if(pan_angle != 0){
-		robot_turn_right(abs(pan_angle)+15);
-		servo_msg_pan.msg = "force_0_pan_camera";
-		servo_msg_pan.num = 0;
-        pub_servo_pan.publish(servo_msg_pan);
+		robot_turn_right(abs(pan_angle));
+		piThreadCreate (pan_camera_timer);
 	}
 	turning_robot_right = false;
 	return 0;
@@ -181,7 +194,7 @@ void qr_pos_Callback(const std_msgs::Int32MultiArray &msg){
         
 	std::vector<int> pos = msg.data;
 int offset = (width - width_roi) /2;
-if(pos[0] <= offset + width_roi*0.08){ // turn left
+if(pos[0] <= offset + width_roi*0.08 && !stop_qr_pos){ // turn left
 //cont_msg.msg = "turn_left";
 servo_msg_pan.msg = "pan_camera";
 servo_msg_pan.num = 15;
@@ -193,7 +206,7 @@ if(!check_pan_angle(15)){
 	start_turn_left_timer();
 }
 }
-}else if(pos[1] >= offset + width_roi*0.92){ // turn right
+}else if(pos[1] >= offset + width_roi*0.92 && !stop_qr_pos){ // turn right
 //cont_msg.msg = "turn_right";
 servo_msg_pan.msg = "pan_camera";
 servo_msg_pan.num = -15;
